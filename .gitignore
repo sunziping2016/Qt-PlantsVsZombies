@@ -1,0 +1,5 @@
+out/
+.idea/
+Makefile
+CMakeLists.txt
+main
