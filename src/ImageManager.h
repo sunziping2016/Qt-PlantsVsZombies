@@ -11,13 +11,13 @@
 class ImageManager
 {
 public:
-    QPixmap loadPixmap(const QString &path);
+    QPixmap load(const QString &path);
 
 private:
     QMap<QString, QPixmap> pixmaps;
 };
 
-extern ImageManager *gImageManager;
+extern ImageManager *gImageCache;
 
 void InitImageManager();
 void DestoryImageManager();

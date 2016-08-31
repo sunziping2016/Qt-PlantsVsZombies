@@ -5,12 +5,12 @@ QT += widgets
 QMAKE_CXXFLAGS += -Wno-unused-parameter
 
 
-HEADERS =              src/MainWindow.h   src/MenuScene.h   src/MouseEventPixmapItem.h   src/GameScene.h       \
-                       src/GameLevelData.h   src/Plant.h   src/Zombie.h   src/Timeout.h   src/ImageManager.h   \
-                       src/PlantCardItem.h   src/Coordinate.h
-SOURCES = src/main.cpp src/MainWindow.cpp src/MenuScene.cpp src/MouseEventPixmapItem.cpp src/GameScene.cpp     \
-                       src/GameLevelData.cpp src/Plant.cpp src/Zombie.cpp src/Timeout.cpp src/ImageManager.cpp \
-                       src/PlantCardItem.cpp src/Coordinate.cpp
+HEADERS =              src/MainView.h   src/SelectorScene.h   src/MouseEventPixmapItem.h   src/GameScene.h       \
+                       src/GameLevelData.h   src/Plant.h   src/Zombie.h   src/Timer.h   src/ImageManager.h   \
+                       src/PlantCardItem.h   src/Coordinate.h   src/AspectRatioLayout.h
+SOURCES = src/main.cpp src/MainView.cpp src/SelectorScene.cpp src/MouseEventPixmapItem.cpp src/GameScene.cpp     \
+                       src/GameLevelData.cpp src/Plant.cpp src/Zombie.cpp               src/ImageManager.cpp \
+                       src/PlantCardItem.cpp src/Coordinate.cpp src/AspectRatioLayout.cpp
 
 TARGET = main
 

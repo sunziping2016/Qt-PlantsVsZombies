@@ -5,7 +5,7 @@
 #include "GameLevelData.h"
 #include "GameScene.h"
 #include "ImageManager.h"
-#include "Timeout.h"
+#include "Timer.h"
 
 ZombieData::ZombieData(const QString &ename, int num, int firstFlag, std::initializer_list<int> flagList)
         : ename(ename), num(num), firstFlag(firstFlag), flagList(flagList)
@@ -55,7 +55,7 @@ void  GameLevelData::loadAccess(GameScene &gameScene, void (GameScene::*callback
 
 void GameLevelData::startGame(GameScene &gameScene)
 {
-    QPixmap prepareGrowPlants = gImageManager->loadPixmap("interface/PrepareGrowPlants.png");
+    QPixmap prepareGrowPlants = gImageCache->load("interface/PrepareGrowPlants.png");
     QGraphicsPixmapItem *imgPrepare = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 0, 255, 108)),
                         *imgGrow    = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 108, 255, 108)),
                         *imgPlants  = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 216, 255, 108));
@@ -74,20 +74,20 @@ void GameLevelData::startGame(GameScene &gameScene)
     initLawnMower(gameScene);
     // TODO: haveFog
     imgPrepare->setVisible(true);
-    (new Timeout(600, [&gameScene, imgPrepare, imgGrow, imgPlants] {
+    (new Timer(&gameScene, 600, [&gameScene, imgPrepare, imgGrow, imgPlants] {
         imgPrepare->setVisible(false);
         imgGrow->setVisible(true);
-        (new Timeout(400, [&gameScene, imgGrow, imgPlants] {
+        (new Timer(&gameScene, 400, [&gameScene, imgGrow, imgPlants] {
             imgGrow->setVisible(false);
             imgPlants->setVisible(true);
-            (new Timeout(1000, [&gameScene, imgPlants] {
+            (new Timer(&gameScene, 1000, [&gameScene, imgPlants] {
                 imgPlants->setVisible(false);
                 gameScene.beginCool();
                 gameScene.autoProduceSun(25);
-                (new Timeout(15000, [&gameScene] {
+                (new Timer(&gameScene, 15000, [&gameScene] {
                     // TODO: flag
-                }, &gameScene))->start();
-            }, &gameScene))->start();
-        }, &gameScene))->start();
-    }, &gameScene))->start();
+                }))->start();
+            }))->start();
+        }))->start();
+    }))->start();
 }

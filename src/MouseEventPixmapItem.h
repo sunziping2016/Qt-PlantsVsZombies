@@ -27,12 +27,12 @@ signals:
     void hoverLeave(QGraphicsSceneHoverEvent *event);
 };
 
-class MouseHoverChangedPixmapItem: public MouseEventPixmapItem
+class HoverChangedPixmapItem: public MouseEventPixmapItem
 {
     Q_OBJECT
 
 public:
-    MouseHoverChangedPixmapItem(const QPixmap &image);
+    HoverChangedPixmapItem(const QPixmap &image);
 
 private:
     QPixmap origImage;

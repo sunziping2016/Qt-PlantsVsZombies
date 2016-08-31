@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include "GameScene.h"
-#include "MainWindow.h"
+#include "MainView.h"
 #include "ImageManager.h"
-#include "Timeout.h"
+#include "Timer.h"
 #include "Plant.h"
 #include "Zombie.h"
 #include "GameLevelData.h"
@@ -19,15 +19,15 @@
 GameScene::GameScene(GameLevelData *gameLevelData)
         : QGraphicsScene(0, 0, 1400, 600),
           gameLevelData(gameLevelData),
-          background(new QGraphicsPixmapItem(gImageManager->loadPixmap(gameLevelData->backgroundImage))),
+          background(new QGraphicsPixmapItem(gImageCache->load(gameLevelData->backgroundImage))),
           techText(new QGraphicsTextItem),
           techTextGroup(new QGraphicsItemGroup),
           displayZombiesGroup(new QGraphicsItemGroup),
           menuGroup(new QGraphicsItemGroup),
           sunNumText(new QGraphicsTextItem(QString::number(gameLevelData->sunNum))),
           sunNumGroup(new QGraphicsItemGroup),
-          selectCardButtonReset(new MouseEventPixmapItem(gImageManager->loadPixmap("interface/SelectCardButton.png"))),
-          selectCardButtonOkay(new MouseEventPixmapItem(gImageManager->loadPixmap("interface/SelectCardButton.png"))),
+          selectCardButtonReset(new MouseEventPixmapItem(gImageCache->load("interface/SelectCardButton.png"))),
+          selectCardButtonOkay(new MouseEventPixmapItem(gImageCache->load("interface/SelectCardButton.png"))),
           selectCardTextReset(new QGraphicsTextItem("重选")),
           selectCardTextOkay(new QGraphicsTextItem("开始")),
           selectCardGroup(new QGraphicsItemGroup),
@@ -39,12 +39,12 @@ GameScene::GameScene(GameLevelData *gameLevelData)
           coordinate(gameLevelData->coord),
           choose(0), sunNum(gameLevelData->sunNum)
 {
-    gMainWindow->setMouseTracking(true);
+    gMainView->setMouseTracking(true);
 
     // Process itemsOnScreen event
-    connect(gMainWindow->horizontalScrollBar(), &QScrollBar::valueChanged, [this](int value){
+    connect(gMainView->horizontalScrollBar(), &QScrollBar::valueChanged, [this](int value) {
         for (const auto &i: itemsOnScreen)
-            i.first->setX(i.second + value);
+            i.first->setX(i.second + scenePos().x());
     });
     // Background
     addItem(background);
@@ -66,7 +66,7 @@ GameScene::GameScene(GameLevelData *gameLevelData)
     displayZombiesGroup->setVisible(false);
     addItem(displayZombiesGroup);
     // Menu
-    MouseEventPixmapItem *menuBackground = new MouseEventPixmapItem(gImageManager->loadPixmap("interface/Button.png"));
+    MouseEventPixmapItem *menuBackground = new MouseEventPixmapItem(gImageCache->load("interface/Button.png"));
     menuGroup->addToGroup(menuBackground);
     QGraphicsTextItem *menuText = new QGraphicsTextItem("菜  单");
     menuText->setPos(0, 12);
@@ -81,7 +81,7 @@ GameScene::GameScene(GameLevelData *gameLevelData)
     menuGroup->setEnabled(false);
     addItemOnScreen(menuGroup);
     // Sun number
-    QGraphicsPixmapItem *sunNumBackground = new QGraphicsPixmapItem(gImageManager->loadPixmap("interface/SunBack.png"));
+    QGraphicsPixmapItem *sunNumBackground = new QGraphicsPixmapItem(gImageCache->load("interface/SunBack.png"));
     sunNumGroup->addToGroup(sunNumBackground);
     sunNumText->setPos(43, 4);
     sunNumText->setTextWidth(68);
@@ -93,7 +93,8 @@ GameScene::GameScene(GameLevelData *gameLevelData)
     sunNumGroup->setVisible(false);
     addItemOnScreen(sunNumGroup);
     // Select Card
-    QGraphicsPixmapItem *selectCardBackground = new QGraphicsPixmapItem(gImageManager->loadPixmap("interface/SeedChooser_Background.png"));
+    QGraphicsPixmapItem *selectCardBackground = new QGraphicsPixmapItem(
+            gImageCache->load("interface/SeedChooser_Background.png"));
     selectCardGroup->addToGroup(selectCardBackground);
     QGraphicsTextItem *selectCardTitle = new QGraphicsTextItem("选择你的卡片");
     selectCardTitle->setPos(0, 8);
@@ -175,7 +176,7 @@ GameScene::~GameScene()
     for(const auto &i: zombieArray)
         delete i.first;
     delete gameLevelData;
-    disconnect(gMainWindow->horizontalScrollBar(), &QScrollBar::valueChanged, 0, 0);
+    disconnect(gMainView->horizontalScrollBar(), &QScrollBar::valueChanged, 0, 0);
 }
 
 void GameScene::setInfoText(QString text, const QColor &color)
@@ -192,19 +193,19 @@ void GameScene::setInfoText(QString text, const QColor &color)
 void GameScene::loadReady()
 {
     if (!gameLevelData->showScroll)
-        gMainWindow->setX(115);
+        gMainView->setScenePos(QPointF(115, 0));
     gameLevelData->loadAccess(*this, &GameScene::checkScroll);
 }
 
 void GameScene::checkScroll()
 {
     if (gameLevelData->showScroll) {
-        setInfoText(gMainWindow->getUsername() + "的房间");
-        (new Timeout(1000, [this]{
+        setInfoText(QSettings().value("Global/Username").toString() + "的房间");
+        (new Timer(this, 1000, [this]{
             setInfoText("");
             initDisplayZombies();
             displayZombiesGroup->setVisible(true);
-            gMainWindow->scrollToX(500, 500, [this]{
+            gMainView->scrollToScenePos(QPointF(500, 0), 1, [this]{
                 menuGroup->setVisible(true);
                 menuGroup->setEnabled(true);
                 if (gameLevelData->canSelectCard) {
@@ -216,7 +217,7 @@ void GameScene::checkScroll()
                         sunNumGroup->setVisible(false);
                         selectCardGroup->setVisible(false);
                         selectCardGroup->setEnabled(false);
-                        gMainWindow->scrollToX(115, 385, [this]{
+                        gMainView->scrollToScenePos(QPointF(115, 0), 1, [this]{
                             displayZombiesGroup->setVisible(false);
                             for (const auto &i: displayZombiesGroup->childItems())
                                 dynamic_cast<MoviePixmapItem *>(i)->stop();
@@ -232,17 +233,17 @@ void GameScene::checkScroll()
                                 break;
                         }
                     }
-                    (new Timeout(1000, [this]{
-                        gMainWindow->scrollToX(115, 385, [this]{
+                    (new Timer(this, 1000, [this]{
+                        gMainView->scrollToScenePos(QPointF(115, 0), 1, [this]{
                             displayZombiesGroup->setVisible(false);
                             for (const auto &i: displayZombiesGroup->childItems())
                                 dynamic_cast<MoviePixmapItem *>(i)->stop();
                             letsGo();
                         });
-                    }, this))->start();
+                    }))->start();
                 }
             });
-        }, this))->start();
+        }))->start();
     }
     else {
         menuGroup->setVisible(true);
@@ -276,7 +277,7 @@ void GameScene::addItemOnScreen(QGraphicsItem *item)
 {
     addItem(item);
     itemsOnScreen.push_back(QPair<QGraphicsItem *, qreal>(item, item->x()));
-    item->setX(item->x() + gMainWindow->horizontalScrollBar()->value());
+    item->setX(item->x() + scenePos().x());
 }
 
 void GameScene::setItemOnScreenPos(QGraphicsItem *item, qreal x, qreal y)
@@ -284,7 +285,7 @@ void GameScene::setItemOnScreenPos(QGraphicsItem *item, qreal x, qreal y)
     for (auto &i: itemsOnScreen)
         if (i.first == item) {
             i.second = x;
-            i.first->setPos(x + gMainWindow->horizontalScrollBar()->value(), y);
+            i.first->setPos(x + scenePos().x(), y);
         }
 }
 
@@ -302,7 +303,7 @@ void GameScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 QPointF GameScene::scenePos() const
 {
-    return QPointF(gMainWindow->horizontalScrollBar()->value(), gMainWindow->verticalScrollBar()->value());
+    return gMainView->mapToScene(0, 0);
 }
 
 GameLevelData *GameScene::getGameLevelData() const
@@ -448,7 +449,7 @@ void GameScene::letsGo()
                 continue;
             selectedPlantGraphicsArray[i].second->setVisible(false);
             auto &item = selectedPlantArray[i];
-            QPixmap staticGif = gImageManager->loadPixmap(item->staticGif);
+            QPixmap staticGif = gImageCache->load(item->staticGif);
             QPointF delta = QPointF(- 0.5 * (item->beAttackedPointL + item->beAttackedPointR), 20 - staticGif.height());
             movePlant->setPixmap(staticGif);
             movePlantAlpha->setPixmap(staticGif);
@@ -553,7 +554,7 @@ void GameScene::autoProduceSun(int sunNum)
     QSharedPointer<QTimer *> timer(new QTimer *(nullptr));
     QSharedPointer<QTimeLine *> anim2(new QTimeLine *(nullptr));
     QTimeLine *anim1 = moveItemTo(sunGif, toX, toY - 53, static_cast<int>(toY * 25 + 0.5), [this, sunGif, timer, anim2] {
-        (*timer = new Timeout(8000, [this, sunGif, anim2] {
+        (*timer = new Timer(this, 8000, [this, sunGif, anim2] {
             *anim2 = new QTimeLine(500, this);
             (*anim2)->setUpdateInterval(20);
             connect((*anim2), &QTimeLine::valueChanged, [sunGif](qreal x) {
@@ -564,7 +565,7 @@ void GameScene::autoProduceSun(int sunNum)
                 delete sunGif;
             });
             (*anim2)->start();
-        }, this))->start();
+        }))->start();
     });
     connect(sunGif, &MoviePixmapItem::click, [this, sunGif, sunNum, anim1, anim2, timer] {
         if (choose != 0) return;
@@ -582,7 +583,7 @@ void GameScene::autoProduceSun(int sunNum)
             updateSunNum();
         });
     });
-    (new Timeout(static_cast<int>(((double)qrand() / RAND_MAX * 3 + 9) * 1000), [this, sunNum] { autoProduceSun(sunNum); }, this))->start();
+    (new Timer(this, static_cast<int>(((double)qrand() / RAND_MAX * 3 + 9) * 1000), [this, sunNum] { autoProduceSun(sunNum); }))->start();
 }
 
 void GameScene::doCoolTime(int index)

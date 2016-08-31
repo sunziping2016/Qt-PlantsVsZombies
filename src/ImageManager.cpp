@@ -4,9 +4,9 @@
 
 #include "ImageManager.h"
 
-ImageManager *gImageManager;
+ImageManager *gImageCache;
 
-QPixmap ImageManager::loadPixmap(const QString &path)
+QPixmap ImageManager::load(const QString &path)
 {
     if (pixmaps.find(path) == pixmaps.end())
         pixmaps.insert(path, QPixmap("images/" + path));
@@ -15,10 +15,10 @@ QPixmap ImageManager::loadPixmap(const QString &path)
 
 void InitImageManager()
 {
-    gImageManager = new ImageManager;
+    gImageCache = new ImageManager;
 }
 
 void DestoryImageManager()
 {
-    delete gImageManager;
+    delete gImageCache;
 }

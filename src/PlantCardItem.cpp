@@ -8,7 +8,7 @@
 
 PlantCardItem::PlantCardItem(const Plant *plant, bool smaller) : checked(true), percent(0), overlayImage(new QGraphicsPixmapItem)
 {
-    QPixmap image = gImageManager->loadPixmap(plant->cardGif);
+    QPixmap image = gImageCache->load(plant->cardGif);
     checkedImage = image.copy(0, 0, image.width(), image.height() / 2);
     uncheckedImage = image.copy(0, image.height() / 2, image.width(), image.height() / 2);
     if (smaller) {

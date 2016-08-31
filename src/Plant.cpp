@@ -34,7 +34,7 @@ bool Plant::canGrow(GameScene &scene, int x, int y) const
 
 void Plant::updateSize()
 {
-    QPixmap pic = gImageManager->loadPixmap(staticGif);
+    QPixmap pic = gImageCache->load(staticGif);
     width = pic.width();
     height = pic.height();
 }
@@ -114,7 +114,7 @@ void PlantInstance::birth(GameScene &scene, double mx, double my, int c, int r)
 {
     double x = mx + plantProtoType->getDX(), y = my + plantProtoType->getDY(c, r) - plantProtoType->height;
     graphicsGroup = new QGraphicsItemGroup;
-    shadowPNG = new QGraphicsPixmapItem(gImageManager->loadPixmap("interface/plantshadow32.png"));
+    shadowPNG = new QGraphicsPixmapItem(gImageCache->load("interface/plantshadow32.png"));
     graphicsGroup->addToGroup(shadowPNG);
     shadowPNG->setPos(plantProtoType->width * 0.5 - 48, plantProtoType->height - 22);
     normalGif = new MoviePixmapItem(plantProtoType->normalGif);

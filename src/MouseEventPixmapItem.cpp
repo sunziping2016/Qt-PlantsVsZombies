@@ -4,16 +4,10 @@
 #include "MouseEventPixmapItem.h"
 
 MouseEventPixmapItem::MouseEventPixmapItem()
-{
-    setCursor(Qt::PointingHandCursor);
-    setAcceptHoverEvents(true);
-}
+{}
 
 MouseEventPixmapItem::MouseEventPixmapItem(const QPixmap &image) : QGraphicsPixmapItem(image)
-{
-    setCursor(Qt::PointingHandCursor);
-    setAcceptHoverEvents(true);
-}
+{}
 
 void MouseEventPixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
@@ -36,12 +30,13 @@ void MouseEventPixmapItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 }
 
 
-MouseHoverChangedPixmapItem::MouseHoverChangedPixmapItem(const QPixmap &image) : origImage(image.copy(0, 0, image.width(), image.height() / 2)),
+HoverChangedPixmapItem::HoverChangedPixmapItem(const QPixmap &image) : origImage(image.copy(0, 0, image.width(), image.height() / 2)),
                                                                                  hoverImage(image.copy(0, image.height() / 2, image.width(), image.height() / 2))
 {
     setPixmap(origImage);
-    connect(this, &MouseHoverChangedPixmapItem::hoverEnter, [this]{ setPixmap(hoverImage); });
-    connect(this, &MouseHoverChangedPixmapItem::hoverLeave, [this]{ setPixmap(origImage); });
+    setAcceptHoverEvents(true);
+    connect(this, &HoverChangedPixmapItem::hoverEnter, [this]{ setPixmap(hoverImage); });
+    connect(this, &HoverChangedPixmapItem::hoverLeave, [this]{ setPixmap(origImage); });
 }
 
 MoviePixmapItem::MoviePixmapItem(const QString &filename) : movie("images/" + filename)
