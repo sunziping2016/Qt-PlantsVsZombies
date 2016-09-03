@@ -17,30 +17,18 @@ class MainView: public QGraphicsView
     Q_OBJECT
 
 public:
-    MainView(MainWindow &mainWindow);
+    MainView(MainWindow *mainWindow);
     ~MainView();
 
     QString getUsername() const;
     void setUsername(const QString &username);
-
-    void setScenePos(QPointF pos);
-    template <typename Functor>
-    void scrollToScenePos(QPointF toScenePos, qreal speed, Functor functor)
-    {
-        QPointF fromScenePos = mapToScene(0, 0), posVector = toScenePos - fromScenePos;
-        qreal distance = qSqrt(QPointF::dotProduct(posVector, posVector));
-        (new TimeLine(this, qRound(distance * speed), 20, [this, fromScenePos, posVector](qreal x) {
-            setScenePos(fromScenePos + x * posVector);
-        }, functor))->start();
-    }
+    MainWindow *getMainWindow() const;
 
     void switchToMenuScene();
     void switchToGameScene(const QString &eName);
 
 protected:
     virtual void resizeEvent(QResizeEvent *event) override;
-    virtual void wheelEvent(QWheelEvent *event) override;
-    virtual void keyPressEvent(QKeyEvent *event) override;
 
 private:
     const int width, height;
@@ -48,7 +36,7 @@ private:
 
     SelectorScene *selectorScene;
     GameScene *gameScene;
-    MainWindow &mainWindow;
+    MainWindow *mainWindow;
 };
 
 class MainWindow: public QMainWindow

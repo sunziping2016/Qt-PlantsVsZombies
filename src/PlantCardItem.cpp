@@ -8,15 +8,11 @@
 
 PlantCardItem::PlantCardItem(const Plant *plant, bool smaller) : checked(true), percent(0), overlayImage(new QGraphicsPixmapItem)
 {
+    setCursor(Qt::PointingHandCursor);
     QPixmap image = gImageCache->load(plant->cardGif);
     checkedImage = image.copy(0, 0, image.width(), image.height() / 2);
     uncheckedImage = image.copy(0, image.height() / 2, image.width(), image.height() / 2);
-    if (smaller) {
-        checkedImage = checkedImage.scaled(70, 42);
-        uncheckedImage = uncheckedImage.scaled(70, 42);
-        lowestHeight = highestHeight = 0;
-    }
-    else {
+    if (!smaller) {
         QPainter p(&uncheckedImage);
         p.setBrush(QBrush(QColor::fromRgba(0x80000000)));
         p.setPen(Qt::NoPen);
@@ -26,24 +22,19 @@ PlantCardItem::PlantCardItem(const Plant *plant, bool smaller) : checked(true), 
         highestHeight = rect.y() + rect.height();
         p.setClipRegion(region);
         p.drawRect(0, 0, uncheckedImage.width(), uncheckedImage.height());
-
     }
     setPixmap(checkedImage);
     overlayImage->setVisible(false);
     overlayImage->setOpacity(0.4);
     overlayImage->setParentItem(this);
-    QGraphicsTextItem *sunNum = new QGraphicsTextItem(QString::number(plant->sunNum));
-    sunNum->setTextWidth(30);
-    sunNum->document()->setDefaultTextOption(QTextOption(Qt::AlignRight));
-    if (smaller) {
-        sunNum->setPos(40, 22);
-        sunNum->setFont(QFont("Times New Roman", 10));
-    }
-    else {
-        sunNum->setPos(60, 35);
-        sunNum->setFont(QFont("Times New Roman", 14));
-    }
+    QGraphicsSimpleTextItem *sunNum = new QGraphicsSimpleTextItem(QString::number(plant->sunNum));
+    sunNum->setFont(QFont("Times New Roman", 16));
+    QSizeF sunNumSize = sunNum->boundingRect().size();
+    sunNum->setPos(checkedImage.width() - sunNumSize.width() - 4, checkedImage.height() - sunNumSize.height());
     sunNum->setParentItem(this);
+    setHandlesChildEvents(true);
+    if (smaller)
+        setScale(0.7);
 }
 
 void PlantCardItem::setChecked(bool newchecked)
@@ -97,17 +88,16 @@ TooltipItem::TooltipItem(const QString &text)
 {
     tooltipText->setTextWidth(180);
     tooltipText->setHtml(text);
-    background = new QGraphicsRectItem(tooltipText->boundingRect());
-    background->setBrush(QBrush(QColor::fromRgb(0xf0f0d0)));
-    background->setPen(QPen(Qt::black));
-    addToGroup(background);
-    addToGroup(tooltipText);
+    tooltipText->setParentItem(this);
+    setRect(tooltipText->boundingRect());
+    setPen(QPen(Qt::black));
+    setBrush(QColor::fromRgb(0xf0f0d0));
 }
 
 void TooltipItem::setText(const QString &text)
 {
     tooltipText->setHtml(text);
-    background->setRect(tooltipText->boundingRect());
+    setRect(tooltipText->boundingRect());
 }
 
 

@@ -26,63 +26,48 @@ public:
     GameScene(GameLevelData *gameLevel);
     ~GameScene();
 
-    void setInfoText(QString text, const QColor &color = Qt::white);
-    QPointF scenePos() const;
+    void setInfoText(const QString &text);
     GameLevelData *getGameLevelData() const;
-    void addItemOnScreen(QGraphicsItem *item);
-    void setItemOnScreenPos(QGraphicsItem *item, qreal x, qreal y);
 
     void beginCool();
     void doCoolTime(int index);
+    void updateTooltip(int index);
     void updateSunNum();
     void autoProduceSun(int sunNum);
+    void customSpecial(const QString &name, int col, int row);
+    void addToGame(QGraphicsItem *item);
 
-    template <typename Functor>
-    QTimeLine *moveItemTo(QGraphicsItem *item, qreal x, qreal y, int duration, Functor function)
-    {
-        QTimeLine *anim = new QTimeLine(duration, this);
-        anim->setUpdateInterval(20);
-        qreal fromX = item->x(), fromY = item->y();
-        connect(anim, &QTimeLine::valueChanged, [item, fromX, fromY, x, y](qreal value) {
-            item->setPos((x - fromX) * value + fromX, (y - fromY) * value + fromY);
-        });
-        connect(anim, &QTimeLine::finished, function);
-        anim->start();
-        return anim;
-    }
+    void loadReady();
+    void loadAcessFinished();
 
 protected:
+    void letsGo();
+
+    static QPointF SizeToPoint(const QSizeF &size);
+
     void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
     void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
-
-    void initDisplayZombies();
-    void initPlantCards();
 
 signals:
     void mouseMove(QGraphicsSceneMouseEvent *mouseEvent);
     void mousePress(QGraphicsSceneMouseEvent *mouseEvent);
 
-public slots:
-    void loadReady();
-protected slots:
-    void checkScroll();
-    void letsGo();
-
 private:
     QVector<QPair<QGraphicsItem *, qreal> > itemsOnScreen;
 
     GameLevelData *gameLevelData;
+
     QGraphicsPixmapItem *background;
-    QGraphicsTextItem *techText;
-    QGraphicsItemGroup *techTextGroup;
-    QGraphicsItemGroup *displayZombiesGroup;
-    QGraphicsItemGroup *menuGroup;
-    QGraphicsTextItem *sunNumText;
-    QGraphicsItemGroup *sunNumGroup;
+    QGraphicsItemGroup *gameGroup;
+    QGraphicsSimpleTextItem *infoText;
+    QGraphicsRectItem *infoTextGroup;
+    MouseEventPixmapItem *menuGroup;
+    QGraphicsSimpleTextItem *sunNumText;
+    QGraphicsPixmapItem *sunNumGroup;
     MouseEventPixmapItem *selectCardButtonReset, *selectCardButtonOkay;
-    QGraphicsTextItem *selectCardTextReset, *selectCardTextOkay;
-    QGraphicsItemGroup *selectCardGroup;
-    QGraphicsItemGroup *selectedPlantGroup;
+    QGraphicsSimpleTextItem *selectCardTextReset, *selectCardTextOkay;
+    QGraphicsPixmapItem *selectingPanel;
+    QGraphicsItemGroup *cardPanel;
     QGraphicsPixmapItem *movePlantAlpha, *movePlant;
     MoviePixmapItem *imgGrowSoil, *imgGrowSpray;
 
@@ -91,11 +76,19 @@ private:
 
     Coordinate coordinate;
 
-    QVector<QPair<Zombie *, int> > zombieArray;
-    QVector<Plant *> selectedPlantArray;
-    QVector<QPair<PlantCardItem *, TooltipItem *> > selectedPlantGraphicsArray;
-    QVector<QPair<bool, bool> > plantReady; // coolDown, sunNum
-    QVector<PlantInstance *> plantInstances;
+    QList<QPair<Zombie *, int> > zombieArray;
+    QList<Plant *> selectedPlantArray;
+    struct CardGraphicsItem {
+        PlantCardItem *plantCard;
+        TooltipItem *tooltip;
+    };
+    QList<CardGraphicsItem > cardGraphics;
+    struct CardReadyItem {
+        bool cool;
+        bool sun;
+    };
+    QList<CardReadyItem> cardReady;
+    QList<PlantInstance *> plantInstances;
     QMap<int, QVector<QString> > mustShowAtFlag;
 
     int choose, sunNum;

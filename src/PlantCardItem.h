@@ -11,14 +11,13 @@
 
 class Plant;
 
-class TooltipItem: public QGraphicsItemGroup
+class TooltipItem: public QGraphicsRectItem
 {
 public:
     TooltipItem(const QString &text);
     void setText(const QString &text);
 private:
     QGraphicsTextItem *tooltipText;
-    QGraphicsRectItem *background;
 };
 
 class PlantCardItem: public MouseEventPixmapItem

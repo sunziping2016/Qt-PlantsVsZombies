@@ -9,7 +9,7 @@ ImageManager *gImageCache;
 QPixmap ImageManager::load(const QString &path)
 {
     if (pixmaps.find(path) == pixmaps.end())
-        pixmaps.insert(path, QPixmap("images/" + path));
+        pixmaps.insert(path, QPixmap(":/images/" + path));
     return pixmaps[path];
 }
 

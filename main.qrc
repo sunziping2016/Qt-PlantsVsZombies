@@ -1,0 +1,62 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <!-- Inteface -->
+        <!-- Selector -->
+        <file>images/interface/SelectorBackground.png</file>
+        <file>images/interface/SelectorAdventureShadow.png</file>
+        <file>images/interface/SelectorAdventureButton.png</file>
+        <file>images/interface/SelectorSurvivalShadow.png</file>
+        <file>images/interface/SelectorSurvivalButton.png</file>
+        <file>images/interface/SelectorChallengeShadow.png</file>
+        <file>images/interface/SelectorChallengeButton.png</file>
+        <file>images/interface/SelectorWoodSign1.png</file>
+        <file>images/interface/SelectorWoodSign2.png</file>
+        <file>images/interface/SelectorWoodSign3.png</file>
+        <file>images/interface/SelectorZombieHand.gif</file>
+        <!-- Game -->
+        <file>images/interface/SelectCardButton.png</file>
+        <file>images/interface/GrowSoil.gif</file>
+        <file>images/interface/GrowSpray.gif</file>
+        <file>images/interface/Button.png</file>
+        <file>images/interface/SunBack.png</file>
+        <file>images/interface/SeedChooser_Background.png</file>
+        <file>images/interface/Sun.gif</file>
+        <!-- Level -->
+        <file>images/interface/background1.jpg</file>
+        <file>images/interface/background1unsodded.jpg</file>
+        <file>images/interface/background1unsodded1.jpg</file>
+        <file>images/interface/background1unsodded2.jpg</file>
+        <file>images/interface/PrepareGrowPlants.png</file>
+        <!-- Plants -->
+        <file>images/interface/plantShadow.png</file>
+        <!-- Card -->
+        <file>images/Card/Plants/Peashooter.png</file>
+        <file>images/Card/Plants/SnowPea.png</file>
+        <file>images/Card/Plants/SunFlower.png</file>
+        <file>images/Card/Plants/WallNut.png</file>
+        <!-- Peashooter -->
+        <file>images/Plants/Peashooter/0.gif</file>
+        <file>images/Plants/Peashooter/Peashooter.gif</file>
+        <!-- Snow Pea -->
+        <file>images/Plants/SnowPea/0.gif</file>
+        <file>images/Plants/SnowPea/SnowPea.gif</file>
+        <!-- Sunflower -->
+        <file>images/Plants/SunFlower/0.gif</file>
+        <file>images/Plants/SunFlower/SunFlower1.gif</file>
+        <!-- WallNut -->
+        <file>images/Plants/WallNut/0.gif</file>
+        <file>images/Plants/WallNut/WallNut.gif</file>
+        <!-- Cleaner -->
+        <file>images/interface/LawnCleaner.png</file>
+        <file>images/interface/PoolCleaner.png</file>
+        <!-- Zombies -->
+        <!-- Zombie -->
+        <file>images/Card/Zombies/Zombie.png</file>
+        <file>images/Zombies/Zombie/0.gif</file>
+        <file>images/Zombies/Zombie/Zombie.gif</file>
+        <file>images/Zombies/Zombie/1.gif</file>
+        <!-- Translations -->
+        <file>translations/main.zh_CN.qm</file>
+    </qresource>
+</RCC>

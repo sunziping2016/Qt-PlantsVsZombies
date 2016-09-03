@@ -3,30 +3,65 @@
 //
 #include "MouseEventPixmapItem.h"
 
+MouseEventRectItem::MouseEventRectItem()
+{
+    setAcceptHoverEvents(true);
+}
+
+MouseEventRectItem::MouseEventRectItem(const QRectF &rect) : QGraphicsRectItem(rect)
+{
+    setAcceptHoverEvents(true);
+}
+
+void MouseEventRectItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    emit clicked(event);
+}
+
+void MouseEventRectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    emit hoverEntered(event);
+}
+
+void MouseEventRectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    emit hoverLeft(event);
+}
+
+void MouseEventRectItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+{
+    emit hoverMoved(event);
+}
+
+
 MouseEventPixmapItem::MouseEventPixmapItem()
-{}
+{
+    setAcceptHoverEvents(true);
+}
 
 MouseEventPixmapItem::MouseEventPixmapItem(const QPixmap &image) : QGraphicsPixmapItem(image)
-{}
+{
+    setAcceptHoverEvents(true);
+}
 
 void MouseEventPixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    emit click(event);
+    emit clicked(event);
 }
 
 void MouseEventPixmapItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
-    emit hoverEnter(event);
+    emit hoverEntered(event);
 }
 
 void MouseEventPixmapItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
-    emit hoverLeave(event);
+    emit hoverLeft(event);
 }
 
 void MouseEventPixmapItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 {
-    emit hoverMove(event);
+    emit hoverMoved(event);
 }
 
 
@@ -35,11 +70,11 @@ HoverChangedPixmapItem::HoverChangedPixmapItem(const QPixmap &image) : origImage
 {
     setPixmap(origImage);
     setAcceptHoverEvents(true);
-    connect(this, &HoverChangedPixmapItem::hoverEnter, [this]{ setPixmap(hoverImage); });
-    connect(this, &HoverChangedPixmapItem::hoverLeave, [this]{ setPixmap(origImage); });
+    connect(this, &HoverChangedPixmapItem::hoverEntered, [this] { setPixmap(hoverImage); });
+    connect(this, &HoverChangedPixmapItem::hoverLeft, [this] { setPixmap(origImage); });
 }
 
-MoviePixmapItem::MoviePixmapItem(const QString &filename) : movie("images/" + filename)
+MoviePixmapItem::MoviePixmapItem(const QString &filename) : movie(":/images/" + filename)
 {
     movie.jumpToFrame(0);
     setPixmap(movie.currentPixmap());

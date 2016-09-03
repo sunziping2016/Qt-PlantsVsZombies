@@ -26,19 +26,77 @@ GameLevelData::GameLevelData() : cardKind(0),
                                  staticCard(true),
                                  showScroll(true),
                                  produceSun(true),
-                                 coord(0)
+                                 maxSelectedCards(8),
+                                 coord(0),
+                                 flagNum(0),
 {}
+
+void  GameLevelData::loadAccess(GameScene *gameScene)
+{
+    gameScene->loadAcessFinished();
+}
+
+void GameLevelData::startGame(GameScene *gameScene)
+{
+    QPixmap prepareGrowPlants = gImageCache->load("interface/PrepareGrowPlants.png");
+    QGraphicsPixmapItem *imgPrepare = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 0, 255, 108)),
+            *imgGrow    = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 108, 255, 108)),
+            *imgPlants  = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 216, 255, 108));
+    imgPrepare ->setPos(373, 246);
+    imgGrow    ->setPos(373, 246);
+    imgPlants  ->setPos(373, 246);
+    imgPrepare ->setZValue(1);
+    imgGrow    ->setZValue(1);
+    imgPlants  ->setZValue(1);
+    imgPrepare ->setVisible(false);
+    imgGrow    ->setVisible(false);
+    imgPlants  ->setVisible(false);
+    gameScene->addItem(imgPrepare);
+    gameScene->addItem(imgGrow);
+    gameScene->addItem(imgPlants);
+    initLawnMower(gameScene);
+    // TODO: haveFog
+    imgPrepare->setVisible(true);
+    (new Timer(gameScene, 600, [gameScene, imgPrepare, imgGrow, imgPlants] {
+        imgPrepare->setVisible(false);
+        imgGrow->setVisible(true);
+        (new Timer(gameScene, 400, [gameScene, imgGrow, imgPlants] {
+            imgGrow->setVisible(false);
+            imgPlants->setVisible(true);
+            (new Timer(gameScene, 1000, [gameScene, imgPlants] {
+                imgPlants->setVisible(false);
+                gameScene->beginCool();
+                gameScene->autoProduceSun(25);
+                (new Timer(gameScene, 15000, [gameScene] {
+                    // TODO: flag
+                }))->start();
+            }))->start();
+        }))->start();
+    }))->start();
+}
+
+void GameLevelData::initLawnMower(GameScene *gameScene)
+{
+    for (int i = 0; i < LF.size(); ++i) {
+        if (LF[i] == 1)
+            gameScene->customSpecial("oLawnCleaner", -1, i);
+        else if (LF[i] == 2)
+            gameScene->customSpecial("oPoolCleaner", -1, i);
+    }
+}
+
 
 GameLevelData_1::GameLevelData_1()
 {
     backgroundImage = "interface/background1.jpg";
     sunNum = 325;
     canSelectCard = false;
-    showScroll = true;
+    showScroll = false;
     eName = "1";
-    cName = "关卡 1-1";
-    pName = { "oPeashooter", "oSnowPea", "oSunFlower", "oWallNut" };
+    cName = tr("Level 1-1");
+    pName = { "oPeashooter", "oSnowPea", "oSunflower", "oWallNut" };
     zombieData.push_back(ZombieData("Zombie", 5, 1));
+    flagNum = 10;
 }
 
 GameLevelData *GameLevelDataFactory(const QString &eName)
@@ -46,48 +104,4 @@ GameLevelData *GameLevelDataFactory(const QString &eName)
     if (eName == "1")
         return new GameLevelData_1;
     return nullptr;
-}
-
-void  GameLevelData::loadAccess(GameScene &gameScene, void (GameScene::*callback)())
-{
-    (gameScene.*callback)();
-}
-
-void GameLevelData::startGame(GameScene &gameScene)
-{
-    QPixmap prepareGrowPlants = gImageCache->load("interface/PrepareGrowPlants.png");
-    QGraphicsPixmapItem *imgPrepare = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 0, 255, 108)),
-                        *imgGrow    = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 108, 255, 108)),
-                        *imgPlants  = new QGraphicsPixmapItem(prepareGrowPlants.copy(0, 216, 255, 108));
-    imgPrepare->setPos(373, 246);
-    imgGrow->setPos(373, 246);
-    imgPlants->setPos(373, 246);
-    imgPrepare->setZValue(1);
-    imgGrow->setZValue(1);
-    imgPlants->setZValue(1);
-    imgPrepare->setVisible(false);
-    imgGrow->setVisible(false);
-    imgPlants->setVisible(false);
-    gameScene.addItemOnScreen(imgPrepare);
-    gameScene.addItemOnScreen(imgGrow);
-    gameScene.addItemOnScreen(imgPlants);
-    initLawnMower(gameScene);
-    // TODO: haveFog
-    imgPrepare->setVisible(true);
-    (new Timer(&gameScene, 600, [&gameScene, imgPrepare, imgGrow, imgPlants] {
-        imgPrepare->setVisible(false);
-        imgGrow->setVisible(true);
-        (new Timer(&gameScene, 400, [&gameScene, imgGrow, imgPlants] {
-            imgGrow->setVisible(false);
-            imgPlants->setVisible(true);
-            (new Timer(&gameScene, 1000, [&gameScene, imgPlants] {
-                imgPlants->setVisible(false);
-                gameScene.beginCool();
-                gameScene.autoProduceSun(25);
-                (new Timer(&gameScene, 15000, [&gameScene] {
-                    // TODO: flag
-                }))->start();
-            }))->start();
-        }))->start();
-    }))->start();
 }

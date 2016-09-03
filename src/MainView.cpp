@@ -10,13 +10,15 @@
 
 MainView *gMainView;
 
-MainView::MainView(MainWindow &mainWindow)
+MainView::MainView(MainWindow *mainWindow)
         : width(900), height(600),
           usernameSettingEntry("Global/Username"),
-          gameScene(nullptr),
+          selectorScene(nullptr), gameScene(nullptr),
           mainWindow(mainWindow)
 {
     gMainView = this;
+
+    setMouseTracking(true);
 
     setRenderHint(QPainter::Antialiasing, true);
     setRenderHint(QPainter::TextAntialiasing, true);
@@ -32,16 +34,15 @@ MainView::MainView(MainWindow &mainWindow)
         if (username.isEmpty())
             username = qgetenv("USERNAME"); // Windows
         if (username.isEmpty())
-            username = tr("游客");
+            username = tr("Guest");
         setUsername(username);
     }
-
-    selectorScene = new SelectorScene; // Requires username
 }
 
 MainView::~MainView()
 {
-    delete selectorScene;
+    if (selectorScene)
+        delete selectorScene;
     if (gameScene)
         delete gameScene;
 }
@@ -56,11 +57,9 @@ void MainView::setUsername(const QString &username)
     return QSettings().setValue(usernameSettingEntry, username);
 }
 
-void MainView::setScenePos(QPointF pos)
+MainWindow *MainView::getMainWindow() const
 {
-    QPoint viewPos = matrix().map(pos).toPoint();
-    horizontalScrollBar()->setValue(viewPos.x());
-    verticalScrollBar()->setValue(viewPos.y());
+    return mainWindow;
 }
 
 void MainView::switchToGameScene(const QString &eName)
@@ -75,7 +74,12 @@ void MainView::switchToGameScene(const QString &eName)
 
 void MainView::switchToMenuScene()
 {
-    setScene(selectorScene);
+    SelectorScene *newSelectorScene = new SelectorScene;
+    setScene(newSelectorScene);
+    if (selectorScene)
+        delete(selectorScene);
+    selectorScene = newSelectorScene;
+    selectorScene->loadReady();
 }
 
 void MainView::resizeEvent(QResizeEvent *event)
@@ -88,19 +92,9 @@ void MainView::resizeEvent(QResizeEvent *event)
     setTransform(trans);
 }
 
-void MainView::wheelEvent(QWheelEvent *event)
-{
-    QApplication::sendEvent(scene(), event);
-}
-
-void MainView::keyPressEvent(QKeyEvent *event)
-{
-    QApplication::sendEvent(scene(), event);
-}
-
 MainWindow::MainWindow()
     : fullScreenSettingEntry("UI/FullScreen"),
-      mainView(new MainView(*this)),
+      mainView(new MainView(this)),
       fullScreenAction(new QAction)
 {
     // Layout

@@ -7,6 +7,26 @@
 
 #include <QtWidgets>
 
+class MouseEventRectItem: public QObject, public QGraphicsRectItem
+{
+    Q_OBJECT
+
+public:
+    MouseEventRectItem();
+    MouseEventRectItem(const QRectF &rect);
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+
+signals:
+    void clicked(QGraphicsSceneMouseEvent *event);
+    void hoverEntered(QGraphicsSceneHoverEvent *event);
+    void hoverMoved(QGraphicsSceneHoverEvent *event);
+    void hoverLeft(QGraphicsSceneHoverEvent *event);
+};
+
 class MouseEventPixmapItem: public QObject, public QGraphicsPixmapItem
 {
     Q_OBJECT
@@ -21,10 +41,10 @@ public:
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
 
 signals:
-    void click(QGraphicsSceneMouseEvent *event);
-    void hoverEnter(QGraphicsSceneHoverEvent *event);
-    void hoverMove(QGraphicsSceneHoverEvent *event);
-    void hoverLeave(QGraphicsSceneHoverEvent *event);
+    void clicked(QGraphicsSceneMouseEvent *event);
+    void hoverEntered(QGraphicsSceneHoverEvent *event);
+    void hoverMoved(QGraphicsSceneHoverEvent *event);
+    void hoverLeft(QGraphicsSceneHoverEvent *event);
 };
 
 class HoverChangedPixmapItem: public MouseEventPixmapItem

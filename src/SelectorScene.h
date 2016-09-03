@@ -9,6 +9,7 @@
 
 class HoverChangedPixmapItem;
 class MoviePixmapItem;
+class MouseEventRectItem;
 
 class TextItemWithoutBorder: public QGraphicsTextItem
 {
@@ -27,6 +28,7 @@ public:
     SelectorScene();
     virtual bool eventFilter(QObject *watched, QEvent *event) override;
 
+    void loadReady();
 private:
     QGraphicsPixmapItem *background;
     QGraphicsPixmapItem *adventureShadow;
@@ -39,6 +41,7 @@ private:
     QGraphicsPixmapItem *woodSign2;
     QGraphicsPixmapItem *woodSign3;
     MoviePixmapItem *zombieHand;
+    MouseEventRectItem *quitButton;
     TextItemWithoutBorder *usernameText;
 };
 

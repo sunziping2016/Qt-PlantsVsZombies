@@ -31,13 +31,17 @@ SelectorScene::SelectorScene()
           woodSign2       (new QGraphicsPixmapItem    (gImageCache->load("interface/SelectorWoodSign2.png"))),
           woodSign3       (new QGraphicsPixmapItem    (gImageCache->load("interface/SelectorWoodSign3.png"))),
           zombieHand      (new MoviePixmapItem        ("interface/SelectorZombieHand.gif")),
-          usernameText(new TextItemWithoutBorder(gMainView->getUsername()))
+          quitButton      (new MouseEventRectItem     (QRectF(0, 0, 79, 53))),
+          usernameText    (new TextItemWithoutBorder  (gMainView->getUsername()))
 {
     addItem(background);
+
+    quitButton      ->setPen(Qt::NoPen);
 
     adventureButton ->setCursor(Qt::PointingHandCursor);
     survivalButton  ->setCursor(Qt::PointingHandCursor);
     challengeButton ->setCursor(Qt::PointingHandCursor);
+    quitButton      ->setCursor(Qt::PointingHandCursor);
 
     adventureShadow ->setPos(468, 82);  addItem(adventureShadow);
     adventureButton ->setPos(474, 80);  addItem(adventureButton);
@@ -45,29 +49,32 @@ SelectorScene::SelectorScene()
     survivalButton  ->setPos(474, 203); addItem(survivalButton);
     challengeShadow ->setPos(480, 307); addItem(challengeShadow);
     challengeButton ->setPos(478, 303); addItem(challengeButton);
+    quitButton      ->setPos(800, 495); addItem(quitButton);
     woodSign1       ->setPos(20, -8);   addItem(woodSign1);
     woodSign2       ->setPos(23, 126);  addItem(woodSign2);
     woodSign3       ->setPos(34, 179);  addItem(woodSign3);
     zombieHand      ->setPos(262, 264); addItem(zombieHand);
     // Text for username
-    usernameText->setPos(55, 83);
+    usernameText->setParentItem(woodSign1);
+    usernameText->setPos(35, 91);
     usernameText->setTextWidth(230);
     usernameText->document()->setDocumentMargin(0);
     usernameText->document()->setDefaultTextOption(QTextOption(Qt::AlignCenter));
-    usernameText->setDefaultTextColor(QColor(0xf0c060));
+    usernameText->setDefaultTextColor(QColor::fromRgb(0xf0c060));
     usernameText->setFont(QFont("Microsoft YaHei", 14, QFont::Bold));
-    addItem(usernameText);
 
     usernameText->installEventFilter(this);
     usernameText->setTextInteractionFlags(Qt::TextEditorInteraction);
 
-    connect(adventureButton, &HoverChangedPixmapItem::click, zombieHand, [this] {
-        adventureButton ->setCursor(Qt::ArrowCursor);
-        survivalButton  ->setCursor(Qt::ArrowCursor);
-        challengeButton ->setCursor(Qt::ArrowCursor);
-        adventureButton ->setEnabled(false);
-        survivalButton  ->setEnabled(false);
-        challengeButton ->setEnabled(false);
+    connect(adventureButton, &HoverChangedPixmapItem::clicked, zombieHand, [this] {
+        adventureButton->setCursor(Qt::ArrowCursor);
+        survivalButton->setCursor(Qt::ArrowCursor);
+        challengeButton->setCursor(Qt::ArrowCursor);
+        woodSign3->setCursor(Qt::ArrowCursor);
+        adventureButton->setEnabled(false);
+        survivalButton->setEnabled(false);
+        challengeButton->setEnabled(false);
+        woodSign3->setEnabled(false);
 
         zombieHand->start();
     });
@@ -75,6 +82,9 @@ SelectorScene::SelectorScene()
         (new Timer(this, 500, [this](){
             gMainView->switchToGameScene(QSettings().value("Global/NextLevel", "1").toString());
         }))->start();
+    });
+    connect(quitButton, &MouseEventRectItem::clicked, [] {
+        gMainView->getMainWindow()->close();
     });
 }
 
@@ -89,11 +99,18 @@ bool SelectorScene::eventFilter(QObject *watched, QEvent *event)
                 setFocusItem(nullptr);
                 return true;
             }
-            else
-                return false;
-        }
-        else
             return false;
+        }
+        return false;
     }
     return QGraphicsScene::eventFilter(watched, event);
+}
+
+void SelectorScene::loadReady()
+{
+    // Animation is so UGLY.
+    //moveItemWithDuration(woodSign1, QPointF(20, -8), 400, [] {}, QTimeLine::EaseOutCurve);
+    //moveItemWithDuration(woodSign2, QPointF(23, 126), 500, [] {}, QTimeLine::EaseOutCurve);
+    //moveItemWithDuration(woodSign3, QPointF(34, 179), 600, [] {}, QTimeLine::EaseOutCurve);
+    gMainView->getMainWindow()->setWindowTitle(tr("Plants vs. Zombies"));
 }

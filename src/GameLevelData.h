@@ -2,8 +2,8 @@
 // Created by sun on 8/26/16.
 //
 
-#ifndef PLANTS_VS_ZOMBIES_GAMELEVEL_H
-#define PLANTS_VS_ZOMBIES_GAMELEVEL_H
+#ifndef PLANTS_VS_ZOMBIES_GAMELEVELDATA_H
+#define PLANTS_VS_ZOMBIES_GAMELEVELDATA_H
 
 #include <QtCore>
 
@@ -18,36 +18,41 @@ public:
     QString ename;
     int num;
     int firstFlag;
-    QVector<int> flagList;
+    QList<int> flagList;
 };
 
 class GameLevelData
 {
+    Q_DECLARE_TR_FUNCTIONS(GameLevelData)
 public:
     GameLevelData();
     virtual ~GameLevelData() {}
 
     QString eName, cName;
 
-    QVector<QString> pName, zName;
+    QList<QString> pName, zName;
     int cardKind;           // 0: plant     1: zombies
     int dKind;
     int sunNum;
 
     QString backgroundImage;
-    QVector<int> LF;
+    QList<int> LF;
     bool canSelectCard, staticCard, showScroll, produceSun;
+    int maxSelectedCards;
     int coord;
 
-    QVector<ZombieData> zombieData;
+    int flagNum;
 
-    virtual void loadAccess(GameScene &gameScene, void (GameScene::*callback)());
-    virtual void initLawnMower(GameScene &gameScene) {}
-    virtual void startGame(GameScene &gameScene);
+    QList<ZombieData> zombieData;
+
+    virtual void loadAccess(GameScene *gameScene);
+    virtual void initLawnMower(GameScene *gameScene);
+    virtual void startGame(GameScene *gameScene);
 };
 
 class GameLevelData_1: public GameLevelData
 {
+    Q_DECLARE_TR_FUNCTIONS(GameLevelData_1)
 public:
     GameLevelData_1();
 };
