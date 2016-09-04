@@ -4,18 +4,47 @@
 
 #include "Zombie.h"
 
-Zombie::Zombie(const QString &ename, const QString &cname, bool canDisplay, const QString &cardImage, const QString &staticImage,
-               const QString &gifImage, const QString &standGif) : ename(ename), cname(cname), canDisplay(canDisplay), cardImage(cardImage),
-                                          staticImage(staticImage), gifImage(gifImage), standGif(standGif)
-{ }
-
-Zombie1::Zombie1() : Zombie("Zombie", "领带僵尸", true, "Card/Zombies/Zombie.png", "Zombies/Zombie/0.gif", "Zombies/Zombie/Zombie.gif", "Zombies/Zombie/1.gif")
+Zombie::Zombie()
+    : hp(270), level(1),
+      canSelect(true), canDisplay(true),
+      beAttackedPointL(82), beAttackedPointR(156),
+      breakPoint(90), sunNum(0), coolTime(0)
 {}
+
+Zombie1::Zombie1()
+{
+    eName = "oZombie";
+    cName = tr("Zombie");
+    QString path = "Zombies/Zombie/";
+    cardGif = "Card/Zombies/Zombie.png";
+    staticGif = path + "0.gif";
+    normalGif = path + "Zombie.gif";
+    attackGif = path + "ZombieAttack.gif";
+    lostHeadGif = path + "ZombieLostHead.gif";
+    lostHeadAttackGif = path + "ZombieLostHeadAttack.gif";
+    headGif = path + "ZombieHead.gif";
+    dieGif = path + "ZombieDie.gif";
+    boomDieGif = path + "BoomDie.gif";
+    standGif = path + "1.gif";
+
+}
+
+ZombieInstance::ZombieInstance(const Zombie *zombie)
+    : zombieProtoType(zombie)
+{}
+
 
 Zombie *ZombieFactory(const QString &ename)
 {
-    if (ename == "Zombie")
+    if (ename == "oZombie")
         return new Zombie1;
     return nullptr;
 }
+
+ZombieInstance *ZombieInstanceFactory(const Zombie *zombie)
+{
+    return new ZombieInstance(zombie);
+}
+
+
 

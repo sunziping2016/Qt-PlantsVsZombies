@@ -98,7 +98,8 @@ class PoolCleaner: public LawnCleaner
 public:
     PoolCleaner();
 };
-Plant * PlantFactory(const QString &eName);
-PlantInstance * PlantInstanceFactory(const Plant *plant);
+
+Plant *PlantFactory(const QString &eName);
+PlantInstance *PlantInstanceFactory(const Plant *plant);
 
 #endif //PLANTS_VS_ZOMBIES_PLANT_H

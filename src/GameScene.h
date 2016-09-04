@@ -8,6 +8,8 @@
 
 #include <QtWidgets>
 #include "Coordinate.h"
+#include "GameLevelData.h"
+#include "Zombie.h"
 
 class Plant;
 class PlantInstance;
@@ -17,6 +19,22 @@ class MouseEventPixmapItem;
 class MoviePixmapItem;
 class PlantCardItem;
 class TooltipItem;
+class Zombie;
+class ZombieInstance;
+
+class FlagMeter: public QGraphicsPixmapItem
+{
+public:
+    FlagMeter(GameLevelData *gameLevelData);
+
+    void updateFlagZombies(int flagZombies);
+private:
+    int flagNum;
+    qreal flagHeadStep;
+    QPixmap flagMeterEmpty, flagMeterFull;
+    QGraphicsPixmapItem *flagTitle, *flagHead;
+    QMap<int, QGraphicsPixmapItem *> flags;
+};
 
 class GameScene: public QGraphicsScene
 {
@@ -29,19 +47,25 @@ public:
     void setInfoText(const QString &text);
     GameLevelData *getGameLevelData() const;
 
-    void beginCool();
-    void doCoolTime(int index);
-    void updateTooltip(int index);
-    void updateSunNum();
-    void autoProduceSun(int sunNum);
-    void customSpecial(const QString &name, int col, int row);
     void addToGame(QGraphicsItem *item);
+    void customSpecial(const QString &name, int col, int row);
+    void prepareGrowPlants(std::function<void(void)> functor);
 
     void loadReady();
     void loadAcessFinished();
+    void beginCool();
+    void beginSun(int sunNum);
+    void beginZombies();
 
+    void plantDie(PlantInstance *plant);
+    void zombieDie(ZombieInstance *zombie);
 protected:
     void letsGo();
+    void doCoolTime(int index);
+    void updateTooltip(int index);
+    void updateSunNum();
+    void advanceFlag();
+    void selectFlagZombie(int levelSum);
 
     static QPointF SizeToPoint(const QSizeF &size);
 
@@ -70,13 +94,13 @@ private:
     QGraphicsItemGroup *cardPanel;
     QGraphicsPixmapItem *movePlantAlpha, *movePlant;
     MoviePixmapItem *imgGrowSoil, *imgGrowSpray;
+    FlagMeter *flagMeter;
 
     QMap<QString, Plant *> plantProtoTypes;
     QMap<QString, Zombie *> zombieProtoTypes;
 
     Coordinate coordinate;
 
-    QList<QPair<Zombie *, int> > zombieArray;
     QList<Plant *> selectedPlantArray;
     struct CardGraphicsItem {
         PlantCardItem *plantCard;
@@ -89,9 +113,11 @@ private:
     };
     QList<CardReadyItem> cardReady;
     QList<PlantInstance *> plantInstances;
-    QMap<int, QVector<QString> > mustShowAtFlag;
+    QList<ZombieInstance *> zombieInstances;
 
     int choose, sunNum;
+    QTimer *waveTimer;
+    int waveNum;
 };
 
 #endif //PLANTS_VS_ZOMBIES_GAMESCENE_H

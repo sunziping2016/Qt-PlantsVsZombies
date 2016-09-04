@@ -22,6 +22,12 @@
         <file>images/interface/SunBack.png</file>
         <file>images/interface/SeedChooser_Background.png</file>
         <file>images/interface/Sun.gif</file>
+        <!-- Flag -->
+        <file>images/interface/FlagMeterEmpty.png</file>
+        <file>images/interface/FlagMeterFull.png</file>
+        <file>images/interface/FlagMeterLevelProgress.png</file>
+        <file>images/interface/FlagMeterParts1.png</file>
+        <file>images/interface/FlagMeterParts2.png</file>
         <!-- Level -->
         <file>images/interface/background1.jpg</file>
         <file>images/interface/background1unsodded.jpg</file>

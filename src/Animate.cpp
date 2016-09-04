@@ -148,26 +148,41 @@ void Animate::generateAnimation(QGraphicsItem *item)
         QPointF posVec = toPos - fromPos;
         keyFrame.duration = qRound(qSqrt(QPointF::dotProduct(posVec, posVec)) / keyFrame.speed);
     }
-    animation->anim = (new TimeLine(nullptr, keyFrame.duration, 20, [item, fromPos, toPos, fromScale, toScale, fromOpacity, toOpacity, move, scale, fade](qreal x) {
-        if (move)
-            item->setPos((toPos - fromPos) * x + fromPos);
-        if (scale)
-            item->setScale((toScale - fromScale) * x + fromScale);
-        if (fade)
-            item->setOpacity((toOpacity - fromOpacity) * x + fromOpacity);
-    }, [item, animation] {
+
+    if (keyFrame.duration <= 0) {
         animation->frames.first().finished(true);
         animation->frames.pop_front();
         if (!animation->frames.isEmpty()) {
             generateAnimation(item);
         }
         else {
-            delete animation->anim;
             delete animation;
             setAnimation(item, nullptr);
         }
-    }, keyFrame.shape));
-    animation->anim->start();
+    }
+    else {
+        animation->anim = (new TimeLine(nullptr, keyFrame.duration, 20,
+            [item, fromPos, toPos, fromScale, toScale, fromOpacity, toOpacity, move, scale, fade](qreal x) {
+            if (move)
+                item->setPos((toPos - fromPos) * x + fromPos);
+            if (scale)
+                item->setScale((toScale - fromScale) * x + fromScale);
+            if (fade)
+                item->setOpacity((toOpacity - fromOpacity) * x + fromOpacity);
+        }, [item, animation] {
+            animation->frames.first().finished(true);
+            animation->frames.pop_front();
+            if (!animation->frames.isEmpty()) {
+                generateAnimation(item);
+            }
+            else {
+                delete animation->anim;
+                delete animation;
+                setAnimation(item, nullptr);
+            }
+        }, keyFrame.shape));
+        animation->anim->start();
+    }
 }
 
 const int Animate::AnimationKey = 0;

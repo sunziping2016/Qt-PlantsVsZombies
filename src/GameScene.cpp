@@ -36,43 +36,37 @@ GameScene::GameScene(GameLevelData *gameLevelData)
           movePlant(new QGraphicsPixmapItem),
           imgGrowSoil(new MoviePixmapItem("interface/GrowSoil.gif")),
           imgGrowSpray(new MoviePixmapItem("interface/GrowSpray.gif")),
+          flagMeter(new FlagMeter(gameLevelData)),
           coordinate(gameLevelData->coord),
-          choose(0), sunNum(gameLevelData->sunNum)
+          choose(0), sunNum(gameLevelData->sunNum),
+          waveTimer(nullptr), waveNum(0)
 {
     // Process ProtoTypes
     for (const auto &eName: gameLevelData->pName)
         plantProtoTypes.insert(eName, PlantFactory(eName));
     for (const auto &eName: gameLevelData->zName)
         zombieProtoTypes.insert(eName, ZombieFactory(eName));
-
-    for(const auto &i: gameLevelData->zombieData) {
-        for (int j = 0; j < i.num; ++j)
-            zombieArray.push_back(QPair<Zombie *, int>(ZombieFactory(i.ename), i.firstFlag));
-        for(auto j: i.flagList)
-            if (mustShowAtFlag.find(j) == mustShowAtFlag.end())
-                mustShowAtFlag.insert(j, QVector<QString>{i.ename});
-            else
-                mustShowAtFlag[j].push_back(i.ename);
-    }
-    qSort(zombieArray.begin(), zombieArray.end(), [](const QPair<Zombie *, int> &a, const QPair<Zombie *, int> &b){
-        return a.second < b.second;
-    });
     // z-value -- 0: normal 1: tooltip 2: dialog
     // Background (parent of the zombies displayed on the road)
     addItem(background);
     if (gameLevelData->showScroll) {
-        QList<double> yPos;
+        QList<qreal> yPos;
         QList<Zombie *> zombies;
-        for (const auto &i: zombieArray)
-            if(i.first->canDisplay) {
-                yPos.push_back(qFloor(100 + (double) qrand() / RAND_MAX * 400));
-                zombies.push_back(i.first);
+        for (const auto &zombieData: gameLevelData->zombieData) {
+            Zombie *item = zombieProtoTypes[zombieData.eName];
+            if(item->canDisplay) {
+                for (int i = 0; i < zombieData.num; ++i) {
+                    yPos.push_back(qFloor(100 +  qrand() % 400));
+                    zombies.push_back(item);
+                }
             }
+        }
         qSort(yPos.begin(), yPos.end());
         std::random_shuffle(zombies.begin(), zombies.end());
         for (int i = 0; i < zombies.size(); ++i) {
             MoviePixmapItem *pixmap = new MoviePixmapItem(zombies[i]->standGif);
-            pixmap->setPos(qFloor(1115 + (double) qrand() / RAND_MAX * 200) - pixmap->pixmap().width() * 0.5, yPos[i] - pixmap->pixmap().width() * 0.5);
+            QSizeF size = pixmap->boundingRect().size();
+            pixmap->setPos(qFloor(1115 + qrand() % 200) - size.width() * 0.5, yPos[i] - size.width() * 0.5);
             pixmap->setParentItem(background);
         }
     }
@@ -85,8 +79,7 @@ GameScene::GameScene(GameLevelData *gameLevelData)
     infoTextGroup->setPos(0, 500);
     infoTextGroup->setPen(Qt::NoPen);
     infoTextGroup->setBrush(QColor::fromRgb(0x5b432e));
-    infoTextGroup->setOpacity(0.8);
-    infoTextGroup->setVisible(false);
+    infoTextGroup->setOpacity(0);
     addItem(infoTextGroup);
     // Menu
     QGraphicsSimpleTextItem *menuText = new QGraphicsSimpleTextItem(tr("Menu"));
@@ -241,6 +234,9 @@ GameScene::GameScene(GameLevelData *gameLevelData)
     imgGrowSpray->setVisible(false);
     imgGrowSpray->setZValue(50);
     gameGroup->addToGroup(imgGrowSpray);
+    // Flag progress
+    flagMeter->setPos(700, 610);
+    addItem(flagMeter);
 }
 
 GameScene::~GameScene()
@@ -251,20 +247,20 @@ GameScene::~GameScene()
         delete i;
     for (auto i: plantInstances)
         delete i;
+    for (auto i: zombieInstances)
+        delete i;
 
-    for(const auto &i: zombieArray)
-        delete i.first;
     delete gameLevelData;
 }
 
 void GameScene::setInfoText(const QString &text)
 {
     if (text.isEmpty())
-        infoTextGroup->setVisible(false);
+        Animate(infoTextGroup).fade(0).duration(200).finish();
     else {
         infoText->setText(text);
         infoText->setPos(SizeToPoint(infoTextGroup->boundingRect().size() - infoText->boundingRect().size()) / 2);
-        infoTextGroup->setVisible(true);
+        Animate(infoTextGroup).fade(0.8).duration(200).finish();
     }
 }
 
@@ -447,7 +443,6 @@ void GameScene::letsGo()
         }
     });
     gameLevelData->startGame(this);
-    qDebug() << gameLevelData->cName;
 }
 
 void GameScene::beginCool()
@@ -482,15 +477,15 @@ void GameScene::updateTooltip(int index)
     cardGraphics[index].tooltip->setText(text);
 }
 
-void GameScene::autoProduceSun(int sunNum)
+void GameScene::beginSun(int sunNum)
 {
     MoviePixmapItem *sunGif = new MoviePixmapItem("interface/Sun.gif");
     if (sunNum == 15)
         sunGif->setScale(46.0 / 79.0);
     else if (sunNum != 25)
         sunGif->setScale(100.0 / 79.0);
-    double toX = coordinate.getX(static_cast<int>((double)qrand() / RAND_MAX * (coordinate.colCount() - 1) + 1 + 0.5)),
-           toY = coordinate.getY(static_cast<int>((double)qrand() / RAND_MAX * (coordinate.rowCount() - 1) + 1 + 0.5));
+    double toX = coordinate.getX(1 + qrand() % coordinate.colCount()),
+           toY = coordinate.getY(1 + qrand() % coordinate.rowCount());
     sunGif->setPos(toX, -100);
     sunGif->setZValue(2);
     sunGif->setOpacity(0.8);
@@ -523,7 +518,7 @@ void GameScene::autoProduceSun(int sunNum)
             updateSunNum();
         });
     });
-    (new Timer(this, static_cast<int>(((double)qrand() / RAND_MAX * 3 + 9) * 1000), [this, sunNum] { autoProduceSun(sunNum); }))->start();
+    (new Timer(this, (qrand() % 9000 + 3000), [this, sunNum] { beginSun(sunNum); }))->start();
 }
 
 void GameScene::doCoolTime(int index)
@@ -588,4 +583,150 @@ void GameScene::customSpecial(const QString &name, int col, int row)
 void GameScene::addToGame(QGraphicsItem *item)
 {
     gameGroup->addToGroup(item);
+}
+
+void GameScene::beginZombies()
+{
+    Animate(flagMeter).move(QPointF(700, 560)).speed(0.5).finish();
+    advanceFlag();
+}
+
+void GameScene::prepareGrowPlants(std::function<void(void)> functor)
+{
+    QPixmap imgPrepareGrowPlants = gImageCache->load("interface/PrepareGrowPlants.png");
+    QGraphicsPixmapItem *imgPrepare = new QGraphicsPixmapItem(imgPrepareGrowPlants.copy(0, 0, 255, 108)),
+            *imgGrow    = new QGraphicsPixmapItem(imgPrepareGrowPlants.copy(0, 108, 255, 108)),
+            *imgPlants  = new QGraphicsPixmapItem(imgPrepareGrowPlants.copy(0, 216, 255, 108));
+    QPointF pos = SizeToPoint(sceneRect().size() - imgPrepare->boundingRect().size()) / 2;
+    imgPrepare->setPos(pos);
+    imgGrow->setPos(pos);
+    imgPlants->setPos(pos);
+    imgPrepare->setZValue(1);
+    imgGrow->setZValue(1);
+    imgPlants->setZValue(1);
+    imgPrepare->setVisible(false);
+    imgGrow->setVisible(false);
+    imgPlants->setVisible(false);
+    addItem(imgPrepare);
+    addItem(imgGrow);
+    addItem(imgPlants);
+    imgPrepare->setVisible(true);
+    (new Timer(this, 600, [this, imgPrepare, imgGrow, imgPlants, functor] {
+        delete imgPrepare;
+        imgGrow->setVisible(true);
+        (new Timer(this, 400, [this, imgGrow, imgPlants, functor] {
+            delete imgGrow;
+            imgPlants->setVisible(true);
+            (new Timer(this, 1000, [this, imgPlants, functor] {
+                delete imgPlants;
+                functor();
+            }))->start();
+        }))->start();
+    }))->start();
+}
+
+void GameScene::advanceFlag()
+{
+    ++waveNum;
+    flagMeter->updateFlagZombies(waveNum);
+    if (waveNum < gameLevelData->flagNum) {
+        auto iter = gameLevelData->flagToMonitor.find(waveNum);
+        if (iter != gameLevelData->flagToMonitor.end())
+            (new Timer(this, 16900, [this, iter] { (*iter)(this); }))->start();
+        (waveTimer = new Timer(this, 1000/*19900*/, [this] { advanceFlag(); }))->start();
+    }
+    auto &flagToSumNum = gameLevelData->flagToSumNum;
+    selectFlagZombie(flagToSumNum.second[qLowerBound(flagToSumNum.first, waveNum) - flagToSumNum.first.begin()]);
+}
+
+void GameScene::plantDie(PlantInstance *plant)
+{
+    int i = plantInstances.indexOf(plant);
+    delete plantInstances[i];
+    plantInstances.removeAt(i);
+}
+
+
+void GameScene::zombieDie(ZombieInstance *zombie)
+{
+    int i = zombieInstances.indexOf(zombie);
+    delete zombieInstances[i];
+    zombieInstances.removeAt(i);
+    if (zombieInstances.isEmpty()) {
+        waveTimer->stop();
+        (new Timer(this, 5000, [this] { advanceFlag(); }))->start();
+    }
+}
+
+void GameScene::selectFlagZombie(int levelSum)
+{
+    qDebug() << "Wave: " << waveNum << "\tLevel Sum: " << levelSum;
+    QList<Zombie *> zombies, zombiesCandidate;
+    if (gameLevelData->largeWaveFlag.contains(waveNum)) {
+        // Add flag zombie (j--)
+    }
+    for (const auto &zombieData: gameLevelData->zombieData) {
+        if (zombieData.flagList.contains(levelSum)) {
+            Zombie *item = zombieProtoTypes[zombieData.eName];
+            levelSum -= item->level;
+            zombies.push_back(item);
+        }
+        if (zombieData.firstFlag <= levelSum) {
+            Zombie *item = zombieProtoTypes[zombieData.eName];
+            for (int i = 0; i < zombieData.num; ++i)
+                zombiesCandidate.push_back(item);
+        }
+    }
+    qSort(zombiesCandidate.begin(), zombiesCandidate.end(), [](Zombie *a, Zombie *b) { return a->level < b->level; });
+    while (levelSum > 0) {
+        while (zombiesCandidate.last()->level > levelSum)
+            zombiesCandidate.pop_back();
+        Zombie *item = zombiesCandidate[qrand() % zombiesCandidate.size()];
+        levelSum -= item->level;
+        zombies.push_back(item);
+    }
+    for (auto item: zombies)
+        qDebug() << "    " << item->cName;
+}
+
+FlagMeter::FlagMeter(GameLevelData *gameLevelData)
+    : flagNum(gameLevelData->flagNum),
+      flagHeadStep(140.0 / (flagNum - 1)),
+      flagMeterEmpty(gImageCache->load("interface/FlagMeterEmpty.png")),
+      flagMeterFull(gImageCache->load("interface/FlagMeterFull.png")),
+      flagTitle(new QGraphicsPixmapItem(gImageCache->load("interface/FlagMeterLevelProgress.png"))),
+      flagHead(new QGraphicsPixmapItem(gImageCache->load("interface/FlagMeterParts1.png")))
+{
+    setPixmap(flagMeterEmpty);
+
+    flagTitle->setPos(35, 12);
+    flagTitle->setParentItem(this);
+    for (auto i: gameLevelData->largeWaveFlag) {
+        QGraphicsPixmapItem *flag = new QGraphicsPixmapItem(gImageCache->load("interface/FlagMeterParts2.png"));
+        flag->setPos(150 - (i - 1) * flagHeadStep, -3);
+        flag->setParentItem(this);
+        flags.insert(i, flag);
+    }
+    flagHead->setPos(139, -4);
+    flagHead->setParentItem(this);
+    updateFlagZombies(1.0);
+}
+
+void FlagMeter::updateFlagZombies(int flagZombies)
+{
+    auto iter = flags.find(flagZombies);
+    if (iter != flags.end())
+        iter.value()->setY(-12);
+    if (flagZombies < flagNum) {
+        qreal x = 150 - (flagZombies - 1) * flagHeadStep;
+        flagHead->setPos(x - 11, -4);
+        QPixmap flagMeter(flagMeterFull);
+        QPainter p(&flagMeter);
+        p.drawPixmap(0, 0, flagMeterEmpty.copy(0, 0, qRound(x), 21));
+        setPixmap(flagMeter);
+    }
+    else {
+        flagHead->setPos(-1, -3);
+        setPixmap(flagMeterFull);
+    }
 }

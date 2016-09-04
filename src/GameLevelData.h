@@ -12,10 +12,9 @@ class GameScene;
 class ZombieData
 {
 public:
-    ZombieData(const QString &ename = "", int num = 0, int firstFlag = 0, std::initializer_list<int> flagList = {});
-    ZombieData(const ZombieData &orig);
-
-    QString ename;
+    //ZombieData(const QString &ename = "", int num = 0, int firstFlag = 0, std::initializer_list<int> flagList = {});
+    //ZombieData(const ZombieData &orig);
+    QString eName;
     int num;
     int firstFlag;
     QList<int> flagList;
@@ -42,12 +41,16 @@ public:
     int coord;
 
     int flagNum;
+    QList<int> largeWaveFlag;
+    QPair<QList<int>, QList<int> > flagToSumNum;
+    QMap<int, std::function<void(GameScene *)> > flagToMonitor;
 
     QList<ZombieData> zombieData;
 
     virtual void loadAccess(GameScene *gameScene);
     virtual void initLawnMower(GameScene *gameScene);
     virtual void startGame(GameScene *gameScene);
+    virtual void endGame(GameScene *gameScene);
 };
 
 class GameLevelData_1: public GameLevelData
