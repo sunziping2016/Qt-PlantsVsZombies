@@ -8,7 +8,7 @@
 
 #include <QtWidgets>
 #include "Coordinate.h"
-#include "GameLevelData.h"
+#include "Plant.h"
 #include "Zombie.h"
 
 class Plant;
@@ -21,6 +21,15 @@ class PlantCardItem;
 class TooltipItem;
 class Zombie;
 class ZombieInstance;
+
+struct Trigger {
+    Trigger(PlantInstance *plant, qreal from, qreal to, int direction, int id);
+
+    PlantInstance *plant;
+    qreal from, to;
+    int direction;
+    int id;
+};
 
 class FlagMeter: public QGraphicsPixmapItem
 {
@@ -56,9 +65,22 @@ public:
     void beginCool();
     void beginSun(int sunNum);
     void beginZombies();
+    void beginMonitor();
 
     void plantDie(PlantInstance *plant);
     void zombieDie(ZombieInstance *zombie);
+
+    QMap<int, PlantInstance *> getPlant(int col, int row);
+    PlantInstance *getPlant(const QPointF &pos);
+    PlantInstance *getPlant(const QUuid &uuid);
+    ZombieInstance *getZombie(const QUuid &uuid);
+    QPair<MoviePixmapItem *, std::function<void(bool)> > newSun(int sunNum);
+    bool isCrater(int col, int row) const;
+    bool isTombstone(int col, int row) const;
+    Coordinate &getCoordinate();
+
+    void addTrigger(int row, Trigger *trigger);
+
 protected:
     void letsGo();
     void doCoolTime(int index);
@@ -67,7 +89,7 @@ protected:
     void advanceFlag();
     void selectFlagZombie(int levelSum);
 
-    static QPointF SizeToPoint(const QSizeF &size);
+    static QPointF sizeToPoint(const QSizeF &size);
 
     void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
     void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
@@ -92,6 +114,8 @@ private:
     QGraphicsSimpleTextItem *selectCardTextReset, *selectCardTextOkay;
     QGraphicsPixmapItem *selectingPanel;
     QGraphicsItemGroup *cardPanel;
+    QGraphicsPixmapItem *shovel;
+    QGraphicsPixmapItem *shovelBackground;
     QGraphicsPixmapItem *movePlantAlpha, *movePlant;
     MoviePixmapItem *imgGrowSoil, *imgGrowSpray;
     FlagMeter *flagMeter;
@@ -114,6 +138,12 @@ private:
     QList<CardReadyItem> cardReady;
     QList<PlantInstance *> plantInstances;
     QList<ZombieInstance *> zombieInstances;
+    QMap<QPair<int, int>, QMap<int, PlantInstance *> > plantPosition;
+    QList<QPair<int, int> > craters, tombstones;
+    QList<QList<Trigger *> > plantTriggers;
+    QList<QList<ZombieInstance *> > zombieRow;
+    QMap<QUuid, PlantInstance *> plantUuid;
+    QMap<QUuid, ZombieInstance *> zombieUuid;
 
     int choose, sunNum;
     QTimer *waveTimer;

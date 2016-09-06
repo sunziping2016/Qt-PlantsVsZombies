@@ -6,7 +6,6 @@
 #define PLANTS_VS_ZOMBIES_BASESCENE_H
 
 #include <QtWidgets>
-#include "Timer.h"
 
 class Animate
 {

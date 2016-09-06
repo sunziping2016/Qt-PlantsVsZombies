@@ -8,7 +8,7 @@ Timer::Timer(QObject *parent, int timeout, std::function<void(void)> functor) : 
 {
     setInterval(timeout);
     setSingleShot(true);
-    connect(this, &Timer::timeout, functor);
+    connect(this, &Timer::timeout, [this, functor] { functor(); deleteLater(); });
 }
 
 TimeLine::TimeLine(QObject *parent, int duration, int interval, std::function<void(qreal)> onChanged, std::function<void(void)> onFinished, CurveShape shape)
@@ -21,5 +21,5 @@ TimeLine::TimeLine(QObject *parent, int duration, int interval, std::function<vo
     setUpdateInterval(interval);
     setCurveShape(shape);
     connect(this, &TimeLine::valueChanged, onChanged);
-    connect(this, &TimeLine::finished, onFinished);
+    connect(this, &TimeLine::finished, [this, onFinished] { onFinished(); deleteLater(); });
 }

@@ -9,8 +9,9 @@
 #include <QtWidgets>
 
 class MoviePixmapItem;
-
 class GameScene;
+class ZombieInstance;
+class Trigger;
 
 class Plant
 {
@@ -26,7 +27,7 @@ public:
     int beAttackedPointL, beAttackedPointR;
     int zIndex;
     QString cardGif, staticGif, normalGif;
-    bool canEat, canSelect, canTrigger, night;
+    bool canEat, canSelect, night;
     double coolTime;
     int stature, sleep;
     int sunNum;
@@ -34,27 +35,35 @@ public:
 
     virtual double getDX() const;
     virtual double getDY(int x, int y) const;
-    virtual bool canGrow(GameScene &scene, int x, int y) const;
+    virtual bool canGrow(int x, int y) const;
 
-protected:
-    void updateSize();
+    GameScene *scene;
+    void update();
 };
 
 class PlantInstance
 {
 public:
     PlantInstance(const Plant *plant);
-    virtual ~PlantInstance() {}
+    virtual ~PlantInstance();
 
-    virtual void birth(GameScene &scene, double mx, double my, int c, int r);
+    virtual void birth(int c, int r);
+    virtual void initTrigger();
+    virtual void triggerCheck(ZombieInstance *zombieInstance, Trigger *trigger);
+    virtual void normalAttack(ZombieInstance *zombieInstance);
 
-private:
+    bool contains(const QPointF &pos);
+
     const Plant *plantProtoType;
 
+    QUuid uuid;
     int row, col;
+    bool canTrigger;
+    qreal attackedLX, attackedRX;
+    QList<Trigger *> triggers;
 
     QGraphicsPixmapItem *shadowPNG;
-    MoviePixmapItem *normalGif;
+    MoviePixmapItem *picture;
 };
 
 class Peashooter: public Plant
@@ -78,6 +87,15 @@ public:
     SunFlower();
 };
 
+class SunFlowerInstance: public PlantInstance
+{
+public:
+    SunFlowerInstance(const Plant *plant);
+    virtual void initTrigger();
+private:
+    QString lightedGif;
+};
+
 class WallNut: public Plant
 {
     Q_DECLARE_TR_FUNCTIONS(WallNut)
@@ -99,7 +117,7 @@ public:
     PoolCleaner();
 };
 
-Plant *PlantFactory(const QString &eName);
+Plant *PlantFactory(GameScene *scene, const QString &eName);
 PlantInstance *PlantInstanceFactory(const Plant *plant);
 
 #endif //PLANTS_VS_ZOMBIES_PLANT_H

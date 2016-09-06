@@ -7,18 +7,25 @@
 
 
 #include <QtCore>
+#include <QtWidgets>
+
+class MoviePixmapItem;
+class GameScene;
+class PlantInstance;
 
 class Zombie
 {
     Q_DECLARE_TR_FUNCTIONS(Zombie)
 public:
     Zombie();
+    virtual ~Zombie() {}
 
     QString eName, cName;
 
     int width, height;
 
     int hp, level;
+    qreal speed;
     bool canSelect, canDisplay;
 
     QString cardGif, staticGif, normalGif, attackGif, lostHeadGif,
@@ -27,6 +34,12 @@ public:
     int beAttackedPointL, beAttackedPointR;
     int breakPoint, sunNum;
     qreal coolTime;
+
+    virtual bool canPass(int row) const;
+
+    void update();
+
+    GameScene *scene;
 };
 
 class Zombie1: public Zombie
@@ -40,12 +53,29 @@ class ZombieInstance
 {
 public:
     ZombieInstance(const Zombie *zombie);
+    virtual ~ZombieInstance() {}
 
-private:
+    virtual void birth(int row);
+    virtual void checkActs();
+    virtual void judgeAttack();
+    virtual void normalAttack(PlantInstance *plant);
+
+    QUuid uuid;
+    int hp;
+    qreal speed;
+    int altitude;
+    bool beAttacked, isAttacking;
+
+    qreal X, ZX;
+    qreal attackedLX, attackedRX;
+    int row;
     const Zombie *zombieProtoType;
+
+    QGraphicsPixmapItem *shadowPNG;
+    MoviePixmapItem *picture;
 };
 
-Zombie *ZombieFactory(const QString &ename);
+Zombie *ZombieFactory(GameScene *scene, const QString &ename);
 ZombieInstance *ZombieInstanceFactory(const Zombie *zombie);
 
 #endif //PLANTS_VS_ZOMBIES_ZOMBIE_H

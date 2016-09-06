@@ -74,28 +74,55 @@ HoverChangedPixmapItem::HoverChangedPixmapItem(const QPixmap &image) : origImage
     connect(this, &HoverChangedPixmapItem::hoverLeft, [this] { setPixmap(origImage); });
 }
 
-MoviePixmapItem::MoviePixmapItem(const QString &filename) : movie(":/images/" + filename)
+MoviePixmapItem::MoviePixmapItem(const QString &filename)
+        : movie(nullptr)
 {
-    movie.jumpToFrame(0);
-    setPixmap(movie.currentPixmap());
-    connect(&movie, &QMovie::frameChanged, [this](int i){ setPixmap(movie.currentPixmap()); });
-    connect(&movie, &QMovie::started, [this]{ emit started(); });
-    connect(&movie, &QMovie::finished, [this]{ emit finished(); });
+    setMovie(filename);
+}
+
+MoviePixmapItem::MoviePixmapItem()
+        : movie(nullptr)
+{}
+
+MoviePixmapItem::~MoviePixmapItem()
+{
+    if (movie) {
+        if (movie->state() == QMovie::Running)
+            movie->stop();
+        delete movie;
+    }
+}
+
+void MoviePixmapItem::setMovie(const QString &filename)
+{
+    if (movie) {
+        movie->stop();
+        delete movie;
+    }
+    movie = new QMovie(":/images/" + filename);
+    movie->jumpToFrame(0);
+    setPixmap(movie->currentPixmap());
+    connect(movie, &QMovie::frameChanged, [this](int i){
+        setPixmap(movie->currentPixmap());
+        if (i == 0)
+            emit loopStarted();
+    });
+    connect(movie, &QMovie::finished, [this]{ emit finished(); });
 }
 
 void MoviePixmapItem::start()
 {
-    movie.start();
+    movie->start();
 }
 
 void MoviePixmapItem::stop()
 {
-    movie.stop();
+    movie->stop();
 }
 
 void MoviePixmapItem::reset()
 {
-    movie.jumpToFrame(0);
+    movie->jumpToFrame(0);
 }
 
 void MoviePixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -103,4 +130,14 @@ void MoviePixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     emit click(event);
 }
 
+void MoviePixmapItem::setMovieOnNewLoop(const QString &filename, std::function<void(void)> functor)
+{
+    QSharedPointer<QMetaObject::Connection> connection(new QMetaObject::Connection);
+    *connection = QObject::connect(this, &MoviePixmapItem::loopStarted, [this, connection, filename, functor] {
+        setMovie(filename);
+        QObject::disconnect(*connection);
+        start();
+        functor();
+    });
+}
 

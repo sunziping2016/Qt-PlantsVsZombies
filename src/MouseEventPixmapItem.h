@@ -15,6 +15,7 @@ public:
     MouseEventRectItem();
     MouseEventRectItem(const QRectF &rect);
 
+protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
@@ -35,6 +36,7 @@ public:
     MouseEventPixmapItem();
     MouseEventPixmapItem(const QPixmap &image);
 
+protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
@@ -64,14 +66,18 @@ class MoviePixmapItem: public QObject, public QGraphicsPixmapItem
     Q_OBJECT
 
 public:
+    MoviePixmapItem();
     MoviePixmapItem(const QString &filename);
+    ~MoviePixmapItem();
 
+    void setMovie(const QString &filename);
+    void setMovieOnNewLoop(const QString &filename, std::function<void(void)> functor = [] {});
+protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
 
 signals:
     void click(QGraphicsSceneMouseEvent *event);
-
-    void started();
+    void loopStarted();
     void finished();
 
 public slots:
@@ -80,7 +86,7 @@ public slots:
     void reset();
 
 private:
-    QMovie movie;
+    QMovie *movie;
 };
 
 #endif //PLANTS_VS_ZOMBIES_MOUSEEVENTPIXMAPITEM_H

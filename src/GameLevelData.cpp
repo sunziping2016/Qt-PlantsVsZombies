@@ -26,6 +26,7 @@ GameLevelData::GameLevelData() : cardKind(0),
                                  staticCard(true),
                                  showScroll(true),
                                  produceSun(true),
+                                 hasShovel(true),
                                  maxSelectedCards(8),
                                  coord(0),
                                  flagNum(0)
@@ -39,11 +40,11 @@ void  GameLevelData::loadAccess(GameScene *gameScene)
 void GameLevelData::startGame(GameScene *gameScene)
 {
     initLawnMower(gameScene);
-    // TODO
     gameScene->prepareGrowPlants( [gameScene] {
+        gameScene->beginMonitor();
         gameScene->beginCool();
         gameScene->beginSun(25);
-        (new Timer(gameScene, 2000/*15000*/, [gameScene] {
+        (new Timer(gameScene, 3000/*15000*/, [gameScene] {
             gameScene->beginZombies();
         }))->start();
     });
@@ -68,9 +69,9 @@ void GameLevelData::endGame(GameScene *gameScene)
 GameLevelData_1::GameLevelData_1()
 {
     backgroundImage = "interface/background1.jpg";
-    sunNum = 325;
+    sunNum = 50;
     canSelectCard = false;
-    showScroll = true;
+    showScroll = false;
     eName = "1";
     cName = tr("Level 1-1");
     pName = { "oPeashooter", "oSnowPea", "oSunflower", "oWallNut" };

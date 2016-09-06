@@ -22,6 +22,8 @@
         <file>images/interface/SunBack.png</file>
         <file>images/interface/SeedChooser_Background.png</file>
         <file>images/interface/Sun.gif</file>
+        <file>images/interface/Shovel.png</file>
+        <file>images/interface/ShovelBack.png</file>
         <!-- Flag -->
         <file>images/interface/FlagMeterEmpty.png</file>
         <file>images/interface/FlagMeterFull.png</file>
@@ -50,6 +52,7 @@
         <!-- Sunflower -->
         <file>images/Plants/SunFlower/0.gif</file>
         <file>images/Plants/SunFlower/SunFlower1.gif</file>
+        <file>images/Plants/SunFlower/SunFlower2.gif</file>
         <!-- WallNut -->
         <file>images/Plants/WallNut/0.gif</file>
         <file>images/Plants/WallNut/WallNut.gif</file>
@@ -61,6 +64,12 @@
         <file>images/Card/Zombies/Zombie.png</file>
         <file>images/Zombies/Zombie/0.gif</file>
         <file>images/Zombies/Zombie/Zombie.gif</file>
+        <file>images/Zombies/Zombie/ZombieAttack.gif</file>
+        <file>images/Zombies/Zombie/ZombieLostHead.gif</file>
+        <file>images/Zombies/Zombie/ZombieLostHeadAttack.gif</file>
+        <file>images/Zombies/Zombie/ZombieHead.gif</file>
+        <file>images/Zombies/Zombie/ZombieDie.gif</file>
+        <file>images/Zombies/Zombie/BoomDie.gif</file>
         <file>images/Zombies/Zombie/1.gif</file>
         <!-- Translations -->
         <file>translations/main.zh_CN.qm</file>

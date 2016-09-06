@@ -12,8 +12,6 @@ class GameScene;
 class ZombieData
 {
 public:
-    //ZombieData(const QString &ename = "", int num = 0, int firstFlag = 0, std::initializer_list<int> flagList = {});
-    //ZombieData(const ZombieData &orig);
     QString eName;
     int num;
     int firstFlag;
@@ -36,7 +34,7 @@ public:
 
     QString backgroundImage;
     QList<int> LF;
-    bool canSelectCard, staticCard, showScroll, produceSun;
+    bool canSelectCard, staticCard, showScroll, produceSun, hasShovel;
     int maxSelectedCards;
     int coord;
 
