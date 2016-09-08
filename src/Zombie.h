@@ -26,6 +26,7 @@ public:
 
     int hp, level;
     qreal speed;
+    int aKind, attack;
     bool canSelect, canDisplay;
 
     QString cardGif, staticGif, normalGif, attackGif, lostHeadGif,
@@ -53,18 +54,23 @@ class ZombieInstance
 {
 public:
     ZombieInstance(const Zombie *zombie);
-    virtual ~ZombieInstance() {}
+    virtual ~ZombieInstance();
 
     virtual void birth(int row);
     virtual void checkActs();
     virtual void judgeAttack();
     virtual void normalAttack(PlantInstance *plant);
+    virtual void crushDie();
+    virtual void getPea(int attack, int direction);
+    virtual void getHit(int attack);
+    virtual void autoReduceHp();
+    virtual void normalDie();
 
     QUuid uuid;
     int hp;
     qreal speed;
     int altitude;
-    bool beAttacked, isAttacking;
+    bool beAttacked, isAttacking, goingDie;
 
     qreal X, ZX;
     qreal attackedLX, attackedRX;

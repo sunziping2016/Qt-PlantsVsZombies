@@ -454,8 +454,11 @@ void GameScene::letsGo()
             else {
                 shovel->setPos(e->scenePos() - shovelBackground->scenePos() + delta);
                 PlantInstance *plant = getPlant(e->scenePos());
-                if (!uuid->isNull() && (!plant || plant->uuid != *uuid))
-                    getPlant(*uuid)->picture->setOpacity(1.0);
+                if (!uuid->isNull() && (!plant || plant->uuid != *uuid)) {
+                    PlantInstance *prevPlant = getPlant(*uuid);
+                    if (prevPlant)
+                        prevPlant->picture->setOpacity(1.0);
+                }
                 if (plant && plant->uuid != *uuid) {
                     plant->picture->setOpacity(0.6);
                 }
@@ -469,7 +472,7 @@ void GameScene::letsGo()
                 }
             }
         });
-        *clickConnection = connect(this, &GameScene::mousePress, [this, i, moveConnection, clickConnection, item](QGraphicsSceneMouseEvent *e) {
+        *clickConnection = connect(this, &GameScene::mousePress, [this, i, moveConnection, clickConnection, item, uuid](QGraphicsSceneMouseEvent *e) {
             disconnect(*moveConnection);
             disconnect(*clickConnection);
             if (choose == 1) {
@@ -491,10 +494,12 @@ void GameScene::letsGo()
                         growGif->reset();
                         disconnect(*connection.data());
                     });
+                    auto key = qMakePair(xPair.second, yPair.second);
+                    if (plantPosition.contains(key) && plantPosition[key].contains(item->pKind))
+                        plantDie(plantPosition[key][item->pKind]);
                     PlantInstance *plantInstance = PlantInstanceFactory(item);
                     plantInstance->birth(xPair.second, yPair.second);
                     plantInstances.push_back(plantInstance);
-                    auto key = qMakePair(xPair.second, yPair.second);
                     if (!plantPosition.contains(key))
                         plantPosition.insert(key, QMap<int, PlantInstance *>());
                     plantPosition[key].insert(item->pKind, plantInstance);
@@ -514,6 +519,11 @@ void GameScene::letsGo()
                     shovel->setCursor(Qt::PointingHandCursor);
                     shovelBackground->setCursor(Qt::PointingHandCursor);
                 });
+                if (!uuid->isNull()) {
+                    PlantInstance *prevPlant = getPlant(*uuid);
+                    if (prevPlant)
+                        prevPlant->picture->setOpacity(1.0);
+                }
                 if (e->button() == Qt::LeftButton) {
                     PlantInstance *plant = getPlant(e->scenePos());
                     if (plant)
@@ -757,7 +767,7 @@ void GameScene::zombieDie(ZombieInstance *zombie)
     int i = zombieInstances.indexOf(zombie);
     zombieInstances.removeAt(i);
     zombieRow[zombie->row].removeOne(zombie);
-    if (zombieInstances.isEmpty()) {
+    if (zombieInstances.isEmpty() && waveNum < gameLevelData->flagNum) {
         delete waveTimer;
         (new Timer(this, 5000, [this] { advanceFlag(); }))->start();
     }
@@ -862,17 +872,20 @@ void GameScene::beginMonitor()
         for (int row = 1; row <= coordinate.rowCount(); ++row) {
             QList<ZombieInstance *> zombiesCopy = zombieRow[row];
             for (ZombieInstance *zombie: zombiesCopy) {
+                QUuid zombieUuid = zombie->uuid;
                 if (zombie->hp > 0 && zombie->ZX <= 900) {
                     QList<Trigger *> triggerCopy = plantTriggers[row];
                     for (auto trigger: triggerCopy) {
                         if (trigger->plant->canTrigger
                             && trigger->from <= zombie->attackedLX
                             && trigger->to >= zombie->attackedLX) {
-
+                            trigger->plant->triggerCheck(zombie, trigger);
                         }
                     }
                 }
-                zombie->checkActs();
+                ZombieInstance *z = getZombie(zombieUuid);
+                if (z)
+                    z->checkActs();
             }
         }
     });
@@ -891,6 +904,20 @@ ZombieInstance *GameScene::getZombie(const QUuid &uuid)
     if (zombieUuid.contains(uuid))
         return zombieUuid[uuid];
     return nullptr;
+}
+
+QList<ZombieInstance *> GameScene::getZombieOnRow(int row)
+{
+    return zombieRow[row];
+}
+
+QList<ZombieInstance *> GameScene::getZombieOnRowRange(int row, qreal from, qreal to)
+{
+    QList<ZombieInstance *> zombies;
+    for (auto zombie: zombieRow[row])
+        if (zombie->hp > 0 && zombie->attackedLX < to && (zombie->attackedLX > from || zombie->attackedRX > from))
+            zombies.push_back(zombie);
+    return zombies;
 }
 
 FlagMeter::FlagMeter(GameLevelData *gameLevelData)

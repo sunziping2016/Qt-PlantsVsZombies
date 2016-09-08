@@ -69,7 +69,7 @@ void GameLevelData::endGame(GameScene *gameScene)
 GameLevelData_1::GameLevelData_1()
 {
     backgroundImage = "interface/background1.jpg";
-    sunNum = 50;
+    sunNum = 100;
     canSelectCard = false;
     showScroll = false;
     eName = "1";

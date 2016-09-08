@@ -51,6 +51,7 @@ public:
     virtual void initTrigger();
     virtual void triggerCheck(ZombieInstance *zombieInstance, Trigger *trigger);
     virtual void normalAttack(ZombieInstance *zombieInstance);
+    virtual void getHurt(ZombieInstance *zombie, int aKind, int attack);
 
     bool contains(const QPointF &pos);
 
@@ -58,9 +59,10 @@ public:
 
     QUuid uuid;
     int row, col;
+    int hp;
     bool canTrigger;
     qreal attackedLX, attackedRX;
-    QList<Trigger *> triggers;
+    QMap<int, QList<Trigger *> > triggers;
 
     QGraphicsPixmapItem *shadowPNG;
     MoviePixmapItem *picture;
@@ -71,6 +73,15 @@ class Peashooter: public Plant
     Q_DECLARE_TR_FUNCTIONS(Peashooter)
 public:
     Peashooter();
+};
+
+class PeashooterInstance: public PlantInstance
+{
+public:
+    PeashooterInstance(const Plant *plant);
+    virtual void normalAttack(ZombieInstance *zombieInstance);
+private:
+    QString bulletGif, bulletHitGif;
 };
 
 class SnowPea: public Peashooter
@@ -101,7 +112,20 @@ class WallNut: public Plant
     Q_DECLARE_TR_FUNCTIONS(WallNut)
 public:
     WallNut();
+    virtual bool canGrow(int x, int y) const;
 };
+
+class WallNutInstance: public PlantInstance
+{
+public:
+    WallNutInstance(const Plant *plant);
+    virtual void initTrigger();
+    virtual void getHurt(ZombieInstance *zombie, int aKind, int attack);
+private:
+    int hurtStatus;
+    QString crackedGif1, crackedGif2;
+};
+
 
 class LawnCleaner: public Plant
 {
@@ -110,11 +134,35 @@ public:
     LawnCleaner();
 };
 
+class LawnCleanerInstance: public PlantInstance
+{
+public:
+    LawnCleanerInstance(const Plant *plant);
+    virtual void initTrigger();
+    virtual void triggerCheck(ZombieInstance *zombieInstance, Trigger *trigger);
+    virtual void normalAttack(ZombieInstance *zombieInstance);
+};
+
 class PoolCleaner: public LawnCleaner
 {
     Q_DECLARE_TR_FUNCTIONS(PoolCleaner)
 public:
     PoolCleaner();
+};
+
+class Bullet
+{
+public:
+    Bullet(GameScene *scene, int type, int row, qreal from, qreal x, qreal y, qreal zvalue,  int direction);
+    ~Bullet();
+    void start();
+private:
+    void move();
+
+    GameScene *scene;
+    int count, type, row, direction;
+    qreal from;
+    QGraphicsPixmapItem *picture;
 };
 
 Plant *PlantFactory(GameScene *scene, const QString &eName);

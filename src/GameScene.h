@@ -74,6 +74,9 @@ public:
     PlantInstance *getPlant(const QPointF &pos);
     PlantInstance *getPlant(const QUuid &uuid);
     ZombieInstance *getZombie(const QUuid &uuid);
+    QList<ZombieInstance *> getZombieOnRow(int row);
+    QList<ZombieInstance *> getZombieOnRowRange(int row, qreal from, qreal to);
+
     QPair<MoviePixmapItem *, std::function<void(bool)> > newSun(int sunNum);
     bool isCrater(int col, int row) const;
     bool isTombstone(int col, int row) const;

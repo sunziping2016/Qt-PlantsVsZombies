@@ -8,9 +8,11 @@
 #include "ImageManager.h"
 #include "MouseEventPixmapItem.h"
 #include "Plant.h"
+#include "Timer.h"
 
 Zombie::Zombie()
     : hp(270), level(1), speed(1.5),
+      aKind(0), attack(100),
       canSelect(true), canDisplay(true),
       beAttackedPointL(82), beAttackedPointR(156),
       breakPoint(90), sunNum(0), coolTime(0)
@@ -27,7 +29,6 @@ void Zombie::update()
     width = pic.width();
     height = pic.height();
 }
-
 
 Zombie1::Zombie1()
 {
@@ -56,6 +57,7 @@ ZombieInstance::ZombieInstance(const Zombie *zombie)
     altitude = 1;
     beAttacked = true;
     isAttacking = false;
+    goingDie = false;
     picture = new MoviePixmapItem;
 }
 
@@ -80,6 +82,7 @@ void ZombieInstance::birth(int row)
 
 void ZombieInstance::checkActs()
 {
+    if (hp < 1) return;
     if (beAttacked && !isAttacking) {
         judgeAttack();
     }
@@ -92,7 +95,7 @@ void ZombieInstance::checkActs()
             // TODO: Disappear
         }
         else if (attackedRX < 100) {
-            // TODO: Win
+            // TODO: Lose
         }
     }
 }
@@ -100,7 +103,7 @@ void ZombieInstance::checkActs()
 void ZombieInstance::judgeAttack()
 {
     bool tempIsAttacking = false;
-    PlantInstance *plant;
+    PlantInstance *plant = nullptr;
     int col = zombieProtoType->scene->getCoordinate().getCol(ZX);
     if (col >= 1 && col <= 9) {
         auto plants = zombieProtoType->scene->getPlant(col, row);
@@ -123,11 +126,105 @@ void ZombieInstance::judgeAttack()
             picture->setMovie(zombieProtoType->normalGif);
         picture->start();
     }
+    if (isAttacking)
+        normalAttack(plant);
 }
 
-void ZombieInstance::normalAttack(PlantInstance *plant)
+void ZombieInstance::normalAttack(PlantInstance *plantInstance)
 {
+    QUuid plantUuid = plantInstance->uuid;
+    (new Timer(this->picture, 1000, [this, plantUuid] {
+        if (beAttacked) {
+            PlantInstance *plant = zombieProtoType->scene->getPlant(plantUuid);
+            if (plant)
+                plant->getHurt(this, zombieProtoType->aKind, zombieProtoType->attack);
+            judgeAttack();
+        }
+    }))->start();
+}
 
+ZombieInstance::~ZombieInstance()
+{
+    picture->deleteLater();
+}
+
+void ZombieInstance::crushDie()
+{
+    if (goingDie)
+        return;
+    goingDie =  true;
+    hp = 0;
+    MoviePixmapItem *goingDieHead = new MoviePixmapItem(zombieProtoType->headGif);
+    goingDieHead->setPos(zombieProtoType->beAttackedPointL, -20);
+    goingDieHead->setParentItem(picture);
+    goingDieHead->start();
+    shadowPNG->setPixmap(QPixmap());
+    picture->stop();
+    picture->setPixmap(QPixmap());
+    (new Timer(picture, 2000, [this] {
+        // TODO: Pole Vaulting Zombie
+        zombieProtoType->scene->zombieDie(this);
+    }))->start();
+}
+
+void ZombieInstance::getPea(int attack, int direction)
+{
+    getHit(attack);
+}
+
+void ZombieInstance::getHit(int attack)
+{
+    if (!beAttacked || goingDie)
+        return;
+    hp -= attack;
+    if (hp < zombieProtoType->breakPoint) {
+        //hp = 0;
+        if (isAttacking)
+            picture->setMovie(zombieProtoType->lostHeadAttackGif);
+        else
+            picture->setMovie(zombieProtoType->lostHeadGif);
+        picture->start();
+        MoviePixmapItem *goingDieHead = new MoviePixmapItem(zombieProtoType->headGif);
+        goingDieHead->setPos(attackedLX, picture->y() - 20);
+        goingDieHead->setZValue(picture->zValue());
+        zombieProtoType->scene->addToGame(goingDieHead);
+        goingDieHead->start();
+        (new Timer(zombieProtoType->scene, 2000, [goingDieHead] {
+            goingDieHead->deleteLater();
+        }))->start();
+        beAttacked = 0;
+        autoReduceHp();
+    }
+    else {
+        picture->setOpacity(0.5);
+        (new Timer(picture, 100, [this] {
+            picture->setOpacity(1);
+        }))->start();
+    }
+}
+
+void ZombieInstance::autoReduceHp()
+{
+    (new Timer(picture, 1000, [this] {
+        hp-= 60;
+        if (hp < 1)
+            normalDie();
+        else
+            autoReduceHp();
+    }))->start();
+}
+
+void ZombieInstance::normalDie()
+{
+    if (goingDie)
+        return;
+    goingDie =  true;
+    hp = 0;
+    picture->setMovie(zombieProtoType->dieGif);
+    picture->start();
+    (new Timer(picture, 2500, [this] {
+        zombieProtoType->scene->zombieDie(this);
+    }))->start();
 }
 
 Zombie *ZombieFactory(GameScene *scene, const QString &ename)
@@ -146,6 +243,3 @@ ZombieInstance *ZombieInstanceFactory(const Zombie *zombie)
 {
     return new ZombieInstance(zombie);
 }
-
-
-

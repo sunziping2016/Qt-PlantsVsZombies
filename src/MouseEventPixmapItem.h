@@ -72,6 +72,7 @@ public:
 
     void setMovie(const QString &filename);
     void setMovieOnNewLoop(const QString &filename, std::function<void(void)> functor = [] {});
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
 

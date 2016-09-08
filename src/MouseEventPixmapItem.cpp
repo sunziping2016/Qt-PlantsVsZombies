@@ -140,4 +140,3 @@ void MoviePixmapItem::setMovieOnNewLoop(const QString &filename, std::function<v
         functor();
     });
 }
-

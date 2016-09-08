@@ -38,6 +38,12 @@
         <file>images/interface/PrepareGrowPlants.png</file>
         <!-- Plants -->
         <file>images/interface/plantShadow.png</file>
+        <file>images/Plants/PB00.gif</file>
+        <file>images/Plants/PB01.gif</file>
+        <file>images/Plants/PB10.gif</file>
+        <file>images/Plants/PB11.gif</file>
+        <file>images/Plants/PB-10.gif</file>
+        <file>images/Plants/PeaBulletHit.gif</file>
         <!-- Card -->
         <file>images/Card/Plants/Peashooter.png</file>
         <file>images/Card/Plants/SnowPea.png</file>
@@ -56,6 +62,8 @@
         <!-- WallNut -->
         <file>images/Plants/WallNut/0.gif</file>
         <file>images/Plants/WallNut/WallNut.gif</file>
+        <file>images/Plants/WallNut/Wallnut_cracked1.gif</file>
+        <file>images/Plants/WallNut/Wallnut_cracked2.gif</file>
         <!-- Cleaner -->
         <file>images/interface/LawnCleaner.png</file>
         <file>images/interface/PoolCleaner.png</file>
