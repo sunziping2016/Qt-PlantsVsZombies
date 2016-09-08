@@ -34,8 +34,8 @@ Zombie1::Zombie1()
 {
     eName = "oZombie";
     cName = tr("Zombie");
-    QString path = "Zombies/Zombie/";
     cardGif = "Card/Zombies/Zombie.png";
+    QString path = "Zombies/Zombie/";
     staticGif = path + "0.gif";
     normalGif = path + "Zombie.gif";
     attackGif = path + "ZombieAttack.gif";
@@ -45,11 +45,42 @@ Zombie1::Zombie1()
     dieGif = path + "ZombieDie.gif";
     boomDieGif = path + "BoomDie.gif";
     standGif = path + "1.gif";
+}
 
+Zombie2::Zombie2()
+{
+    eName = "oZombie2";
+    normalGif = "Zombies/Zombie/Zombie2.gif";
+    standGif = "Zombies/Zombie/2.gif";
+}
+
+Zombie3::Zombie3()
+{
+    eName = "oZombie3";
+    normalGif = "Zombies/Zombie/Zombie3.gif";
+    standGif = "Zombies/Zombie/3.gif";
+}
+
+FlagZombie::FlagZombie()
+{
+    eName = "oFlagZombie";
+    cName = tr("Flag Zombie");
+    speed = 2.2;
+    beAttackedPointR = 101;
+    QString path = "Zombies/FlagZombie/";
+    cardGif = "Card/Zombies/FlagZombie.png";
+    staticGif = path + "0.gif";
+    normalGif = path + "FlagZombie.gif";
+    attackGif = path + "FlagZombieAttack.gif";
+    lostHeadGif = path + "FlagZombieLostHead.gif";
+    lostHeadAttackGif = path + "FlagZombieLostHeadAttack.gif";
+    standGif = path + "1.gif";
 }
 
 ZombieInstance::ZombieInstance(const Zombie *zombie)
-    : zombieProtoType(zombie)
+    : zombieProtoType(zombie), picture(new MoviePixmapItem),
+      attackMusic(new QMediaPlayer(picture)),
+      hitMusic(new QMediaPlayer(picture))
 {
     uuid = QUuid::createUuid();
     hp = zombieProtoType->hp;
@@ -58,7 +89,8 @@ ZombieInstance::ZombieInstance(const Zombie *zombie)
     beAttacked = true;
     isAttacking = false;
     goingDie = false;
-    picture = new MoviePixmapItem;
+    normalGif = zombie->normalGif;
+    attackGif = zombie->attackGif;
 }
 
 void ZombieInstance::birth(int row)
@@ -69,7 +101,7 @@ void ZombieInstance::birth(int row)
     this->row = row;
 
     Coordinate &coordinate = zombieProtoType->scene->getCoordinate();
-    picture->setMovie(zombieProtoType->normalGif);
+    picture->setMovie(normalGif);
     picture->setPos(X, coordinate.getY(row) - zombieProtoType->height - 10);
     picture->setZValue(3 * row + 1);
     shadowPNG = new QGraphicsPixmapItem(gImageCache->load("interface/plantShadow.png"));
@@ -92,7 +124,7 @@ void ZombieInstance::checkActs()
         X -= speed;
         picture->setX(X);
         if (attackedRX < -50) {
-            // TODO: Disappear
+            zombieProtoType->scene->zombieDie(this);
         }
         else if (attackedRX < 100) {
             // TODO: Lose
@@ -120,10 +152,10 @@ void ZombieInstance::judgeAttack()
     if (tempIsAttacking != isAttacking) {
         isAttacking = tempIsAttacking;
         if (isAttacking) {
-            picture->setMovie(zombieProtoType->attackGif);
+            picture->setMovie(attackGif);
         }
         else
-            picture->setMovie(zombieProtoType->normalGif);
+            picture->setMovie(normalGif);
         picture->start();
     }
     if (isAttacking)
@@ -132,6 +164,18 @@ void ZombieInstance::judgeAttack()
 
 void ZombieInstance::normalAttack(PlantInstance *plantInstance)
 {
+    if (qrand() % 2)
+        attackMusic->setMedia(QUrl("qrc:/audio/chomp.mp3"));
+    else
+        attackMusic->setMedia(QUrl("qrc:/audio/chompsoft.mp3"));
+    attackMusic->play();
+    (new Timer(this->picture, 500, [this] {
+        if (qrand() % 2)
+            attackMusic->setMedia(QUrl("qrc:/audio/chomp.mp3"));
+        else
+            attackMusic->setMedia(QUrl("qrc:/audio/chompsoft.mp3"));
+        attackMusic->play();
+    }))->start();
     QUuid plantUuid = plantInstance->uuid;
     (new Timer(this->picture, 1000, [this, plantUuid] {
         if (beAttacked) {
@@ -169,6 +213,7 @@ void ZombieInstance::crushDie()
 
 void ZombieInstance::getPea(int attack, int direction)
 {
+    playNormalballAudio();
     getHit(attack);
 }
 
@@ -227,11 +272,145 @@ void ZombieInstance::normalDie()
     }))->start();
 }
 
+void ZombieInstance::playNormalballAudio()
+{
+    hitMusic->stop();
+    switch (qrand() % 3) {
+        case 0: hitMusic->setMedia(QUrl("qrc:/audio/splat1.mp3")); break;
+        case 1: hitMusic->setMedia(QUrl("qrc:/audio/splat2.mp3")); break;
+        default: hitMusic->setMedia(QUrl("qrc:/audio/splat3.mp3")); break;
+    }
+    hitMusic->play();
+}
+
+
+OrnZombieInstance1::OrnZombieInstance1(const Zombie *zombie)
+    : ZombieInstance(zombie)
+{
+    ornHp = getZombieProtoType()->ornHp;
+    hasOrnaments = true;
+}
+
+const OrnZombie1 *OrnZombieInstance1::getZombieProtoType()
+{
+    return static_cast<const OrnZombie1 *>(zombieProtoType);
+}
+
+void OrnZombieInstance1::getHit(int attack)
+{
+    if (hasOrnaments) {
+        ornHp -= attack;
+        if (ornHp < 1) {
+            hp += ornHp;
+            hasOrnaments = false;
+            normalGif = getZombieProtoType()->ornLostNormalGif;
+            attackGif = getZombieProtoType()->ornLostAttackGif;
+            picture->setMovie(isAttacking ? attackGif : normalGif);
+            picture->start();
+        }
+        picture->setOpacity(0.5);
+        (new Timer(picture, 100, [this] {
+            picture->setOpacity(1);
+        }))->start();
+    }
+    else
+        ZombieInstance::getHit(attack);
+}
+
+ConeheadZombie::ConeheadZombie()
+{
+    eName = "oConeheadZombie";
+    cName = tr("Conehead Zombie");
+    ornHp = 370;
+    level = 2;
+    sunNum = 75;
+    QString path = "Zombies/ConeheadZombie/";
+    cardGif = "Card/Zombies/ConeheadZombie.png";
+    staticGif = path + "0.gif";
+    normalGif = path + "ConeheadZombie.gif";
+    attackGif = path + "ConeheadZombieAttack.gif";
+    ornLostNormalGif =  "Zombies/Zombie/Zombie.gif";
+    ornLostAttackGif = "Zombies/Zombie/ZombieAttack.gif";
+    standGif = path + "1.gif";
+}
+
+ConeheadZombieInstance::ConeheadZombieInstance(const Zombie *zombie)
+    : OrnZombieInstance1(zombie)
+{}
+
+void ConeheadZombieInstance::playNormalballAudio()
+{
+    if (hasOrnaments) {
+        hitMusic->stop();
+        hitMusic->setMedia(QUrl("qrc:/audio/plastichit.mp3"));
+        hitMusic->play();
+    }
+    else
+        OrnZombieInstance1::playNormalballAudio();
+}
+
+BucketheadZombieInstance::BucketheadZombieInstance(const Zombie *zombie)
+    : OrnZombieInstance1(zombie)
+{}
+
+void BucketheadZombieInstance::playNormalballAudio()
+{
+    if (hasOrnaments) {
+        hitMusic->stop();
+        if (qrand() % 2)
+            hitMusic->setMedia(QUrl("qrc:/audio/shieldhit.mp3"));
+        else
+            hitMusic->setMedia(QUrl("qrc:/audio/shieldhit2.mp3"));
+        hitMusic->play();
+    }
+    else
+        OrnZombieInstance1::playNormalballAudio();
+}
+
+BucketheadZombie::BucketheadZombie()
+{
+    eName = "oBucketheadZombie";
+    cName = tr("Buckethead Zombie");
+    ornHp = 1100;
+    level = 3;
+    sunNum = 125;
+    QString path = "Zombies/BucketheadZombie/";
+    cardGif = "Card/Zombies/BucketheadZombie.png";
+    staticGif = path + "0.gif";
+    normalGif = path + "BucketheadZombie.gif";
+    attackGif = path + "BucketheadZombieAttack.gif";
+    ornLostNormalGif =  "Zombies/Zombie/Zombie2.gif";
+    standGif = path + "1.gif";
+}
+
+PoleVaultingZombie::PoleVaultingZombie()
+{
+    eName = "oPoleVaultingZombie";
+    cName = tr("Pole Vaulting Zombie");
+    hp = 500;
+    speed = 3.2;
+    beAttackedPointL = 215;
+    beAttackedPointR = 260;
+    level = 2;
+    sunNum = 75;
+    
+}
+
 Zombie *ZombieFactory(GameScene *scene, const QString &ename)
 {
     Zombie *zombie = nullptr;
     if (ename == "oZombie")
         zombie = new Zombie1;
+    if (ename == "oZombie2")
+        zombie = new Zombie2;
+    if (ename == "oZombie3")
+        zombie = new Zombie3;
+    if (ename == "oFlagZombie")
+        zombie = new FlagZombie;
+    if (ename == "oConeheadZombie")
+        zombie = new ConeheadZombie;
+    if (ename == "oBucketheadZombie")
+        zombie = new BucketheadZombie;
     if (zombie) {
         zombie->scene = scene;
         zombie->update();
@@ -241,5 +420,11 @@ Zombie *ZombieFactory(GameScene *scene, const QString &ename)
 
 ZombieInstance *ZombieInstanceFactory(const Zombie *zombie)
 {
+    if (zombie->eName == "oConeheadZombie")
+        return new ConeheadZombieInstance(zombie);
+    if (zombie->eName == "oBucketheadZombie")
+        return new BucketheadZombieInstance(zombie);
     return new ZombieInstance(zombie);
 }
+
+

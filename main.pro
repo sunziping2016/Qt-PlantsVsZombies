@@ -1,6 +1,6 @@
 CONFIG += qt debug
 
-QT += widgets
+QT += widgets multimedia
 
 QMAKE_CXXFLAGS += -Wno-unused-parameter
 

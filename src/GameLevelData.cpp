@@ -7,16 +7,6 @@
 #include "ImageManager.h"
 #include "Timer.h"
 
-//ZombieData::ZombieData(const QString &ename, int num, int firstFlag, std::initializer_list<int> flagList)
-//        : ename(ename), num(num), firstFlag(firstFlag), flagList(flagList)
-//{}
-//
-//ZombieData::ZombieData(const ZombieData &orig) : ename(orig.ename),
-//                                                 num(orig.num),
-//                                                 firstFlag(orig.firstFlag),
-//                                                 flagList(orig.flagList)
-//{}
-
 GameLevelData::GameLevelData() : cardKind(0),
                                  dKind(1),
                                  sunNum(50),
@@ -41,6 +31,7 @@ void GameLevelData::startGame(GameScene *gameScene)
 {
     initLawnMower(gameScene);
     gameScene->prepareGrowPlants( [gameScene] {
+        gameScene->beginBGM();
         gameScene->beginMonitor();
         gameScene->beginCool();
         gameScene->beginSun(25);
@@ -69,14 +60,14 @@ void GameLevelData::endGame(GameScene *gameScene)
 GameLevelData_1::GameLevelData_1()
 {
     backgroundImage = "interface/background1.jpg";
+    backgroundMusic = "qrc:/audio/UraniwaNi.mp3";
     sunNum = 100;
-    canSelectCard = false;
-    showScroll = false;
+    canSelectCard = true;
+    showScroll = true;
     eName = "1";
     cName = tr("Level 1-1");
     pName = { "oPeashooter", "oSnowPea", "oSunflower", "oWallNut" };
-    zName = { "oZombie" };
-    zombieData = { { "oZombie", 5, 1, {} } };
+    zombieData = { { "oZombie3", 1, 1, {} }, { "oConeheadZombie", 3, 3, {} }, { "oBucketheadZombie", 3, 3, {} } };
     flagNum = 10;
     largeWaveFlag = { 10 };
     flagToSumNum = QPair<QList<int>, QList<int> >({ 3, 5, 9 }, { 1, 2, 3, 15 });

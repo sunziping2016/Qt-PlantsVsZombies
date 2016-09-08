@@ -2,6 +2,7 @@
 // Created by sun on 8/26/16.
 //
 
+#include <QtMultimedia>
 #include "Plant.h"
 #include "ImageManager.h"
 #include "GameScene.h"
@@ -312,6 +313,9 @@ void LawnCleanerInstance::triggerCheck(ZombieInstance *zombieInstance, Trigger *
 
 void LawnCleanerInstance::normalAttack(ZombieInstance *zombieInstance)
 {
+    QMediaPlayer *player = new QMediaPlayer(plantProtoType->scene);
+    player->setMedia(QUrl("qrc:/audio/lawnmower.mp3"));
+    player->play();
     QSharedPointer<std::function<void(void)> > crush(new std::function<void(void)>);
     *crush = [this, crush] {
         for (auto zombie: plantProtoType->scene->getZombieOnRowRange(row, attackedLX, attackedRX)) {
@@ -330,12 +334,14 @@ void LawnCleanerInstance::normalAttack(ZombieInstance *zombieInstance)
 }
 
 PeashooterInstance::PeashooterInstance(const Plant *plant)
-    : PlantInstance(plant)
+    : PlantInstance(plant), firePea(new QMediaPlayer(picture))
 {
+    firePea->setMedia(QUrl("qrc:/audio/firepea.mp3"));
 }
 
 void PeashooterInstance::normalAttack(ZombieInstance *zombieInstance)
 {
+    firePea->play();
     (new Bullet(plantProtoType->scene, 0, row, attackedLX, attackedLX - 40, picture->y() + 3, picture->zValue() + 2, 0))->start();
 }
 

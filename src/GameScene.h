@@ -7,6 +7,7 @@
 
 
 #include <QtWidgets>
+#include <QtMultimedia>
 #include "Coordinate.h"
 #include "Plant.h"
 #include "Zombie.h"
@@ -62,6 +63,7 @@ public:
 
     void loadReady();
     void loadAcessFinished();
+    void beginBGM();
     void beginCool();
     void beginSun(int sunNum);
     void beginZombies();
@@ -69,6 +71,9 @@ public:
 
     void plantDie(PlantInstance *plant);
     void zombieDie(ZombieInstance *zombie);
+
+    Plant *getPlantProtoType(const QString &eName);
+    Zombie *getZombieProtoType(const QString &eName);
 
     QMap<int, PlantInstance *> getPlant(int col, int row);
     PlantInstance *getPlant(const QPointF &pos);
@@ -122,6 +127,15 @@ private:
     QGraphicsPixmapItem *movePlantAlpha, *movePlant;
     MoviePixmapItem *imgGrowSoil, *imgGrowSpray;
     FlagMeter *flagMeter;
+
+    QMediaPlayer *backgroundMusic;
+    QMediaPlayer *tapMusic;
+    QMediaPlayer *sunMusic;
+    QMediaPlayer *shovelMusic;
+    QMediaPlayer *seedliftMusic;
+    QMediaPlayer *plantMusic1, *plantMusic2;
+    QMediaPlayer *groanMusic;
+    QMediaPlayer *waveMusic;
 
     QMap<QString, Plant *> plantProtoTypes;
     QMap<QString, Zombie *> zombieProtoTypes;

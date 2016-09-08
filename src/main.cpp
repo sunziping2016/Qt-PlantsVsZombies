@@ -17,8 +17,8 @@ int main(int argc, char * *argv)
     // For Translators
     QTranslator appTranslator;
     // TODO: change translation back after debugging
-    //appTranslator.load(QString(":/translations/main.%1.qm").arg(QLocale::system().name()));
-    appTranslator.load(QString(":/translations/main.%1.qm").arg("zh_CN"));
+    appTranslator.load(QString(":/translations/main.%1.qm").arg(QLocale::system().name()));
+    //appTranslator.load(QString(":/translations/main.%1.qm").arg("zh_CN"));
     app.installTranslator(&appTranslator);
 
     InitImageManager();

@@ -32,7 +32,9 @@ SelectorScene::SelectorScene()
           woodSign3       (new QGraphicsPixmapItem    (gImageCache->load("interface/SelectorWoodSign3.png"))),
           zombieHand      (new MoviePixmapItem        ("interface/SelectorZombieHand.gif")),
           quitButton      (new MouseEventRectItem     (QRectF(0, 0, 79, 53))),
-          usernameText    (new TextItemWithoutBorder  (gMainView->getUsername()))
+          usernameText    (new TextItemWithoutBorder  (gMainView->getUsername())),
+          backgroundMusic(new QMediaPlayer(this)),
+          buttonBleep(new QMediaPlayer(this))
 {
     addItem(background);
 
@@ -66,7 +68,22 @@ SelectorScene::SelectorScene()
     usernameText->installEventFilter(this);
     usernameText->setTextInteractionFlags(Qt::TextEditorInteraction);
 
-    connect(adventureButton, &HoverChangedPixmapItem::clicked, zombieHand, [this] {
+    backgroundMusic->setMedia(QUrl("qrc:/audio/Faster.mp3"));
+    buttonBleep->setMedia(QUrl("qrc:/audio/bleep.mp3"));
+
+    connect(backgroundMusic, &QMediaPlayer::stateChanged, [this](QMediaPlayer::State state) {
+        if (state == QMediaPlayer::StoppedState)
+            backgroundMusic->play();
+    });
+
+    connect(adventureButton, &HoverChangedPixmapItem::hoverEntered, [this] { buttonBleep->stop(); buttonBleep->play(); });
+    connect(survivalButton, &HoverChangedPixmapItem::hoverEntered, [this] { buttonBleep->stop(); buttonBleep->play(); });
+    connect(challengeButton, &HoverChangedPixmapItem::hoverEntered, [this] { buttonBleep->stop(); buttonBleep->play(); });
+
+    QMediaPlayer *loseMusic = new QMediaPlayer(this);
+    loseMusic->setMedia(QUrl("qrc:/audio/losemusic.mp3"));
+
+    connect(adventureButton, &HoverChangedPixmapItem::clicked, zombieHand, [this, loseMusic] {
         adventureButton->setCursor(Qt::ArrowCursor);
         survivalButton->setCursor(Qt::ArrowCursor);
         challengeButton->setCursor(Qt::ArrowCursor);
@@ -77,9 +94,13 @@ SelectorScene::SelectorScene()
         woodSign3->setEnabled(false);
 
         zombieHand->start();
+        backgroundMusic->pause();
+        loseMusic->play();
+
     });
-    connect(zombieHand, &MoviePixmapItem::finished, [this] {
-        (new Timer(this, 500, [this](){
+    connect(zombieHand, &MoviePixmapItem::finished, [this, loseMusic] {
+        (new Timer(this, 2500, [this, loseMusic](){
+            loseMusic->stop();
             gMainView->switchToGameScene(QSettings().value("Global/NextLevel", "1").toString());
         }))->start();
     });
@@ -113,4 +134,5 @@ void SelectorScene::loadReady()
     //moveItemWithDuration(woodSign2, QPointF(23, 126), 500, [] {}, QTimeLine::EaseOutCurve);
     //moveItemWithDuration(woodSign3, QPointF(34, 179), 600, [] {}, QTimeLine::EaseOutCurve);
     gMainView->getMainWindow()->setWindowTitle(tr("Plants vs. Zombies"));
+    backgroundMusic->play();
 }

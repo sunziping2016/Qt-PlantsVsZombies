@@ -8,6 +8,7 @@
 
 #include <QtCore>
 #include <QtWidgets>
+#include <QtMultimedia>
 
 class MoviePixmapItem;
 class GameScene;
@@ -50,6 +51,27 @@ public:
     Zombie1();
 };
 
+class Zombie2: public Zombie1
+{
+    Q_DECLARE_TR_FUNCTIONS(Zombie2)
+public:
+    Zombie2();
+};
+
+class Zombie3: public Zombie1
+{
+    Q_DECLARE_TR_FUNCTIONS(Zombie3)
+public:
+    Zombie3();
+};
+
+class FlagZombie: public Zombie1
+{
+    Q_DECLARE_TR_FUNCTIONS(FlagZombie)
+public:
+    FlagZombie();
+};
+
 class ZombieInstance
 {
 public:
@@ -65,6 +87,7 @@ public:
     virtual void getHit(int attack);
     virtual void autoReduceHp();
     virtual void normalDie();
+    virtual void playNormalballAudio();
 
     QUuid uuid;
     int hp;
@@ -77,8 +100,67 @@ public:
     int row;
     const Zombie *zombieProtoType;
 
+    QString normalGif, attackGif;
+
     QGraphicsPixmapItem *shadowPNG;
     MoviePixmapItem *picture;
+    QMediaPlayer *attackMusic, *hitMusic;
+};
+
+class OrnZombie1: public Zombie1
+{
+    Q_DECLARE_TR_FUNCTIONS(OrnZombie1)
+public:
+    int ornHp;
+    QString ornLostNormalGif, ornLostAttackGif;
+};
+
+class OrnZombieInstance1: public ZombieInstance
+{
+public:
+    OrnZombieInstance1(const Zombie *zombie);
+    const OrnZombie1 *getZombieProtoType();
+    virtual void getHit(int attack);
+
+    int ornHp;
+    bool hasOrnaments;
+};
+
+class ConeheadZombie: public OrnZombie1
+{
+    Q_DECLARE_TR_FUNCTIONS(ConeheadZombie)
+public:
+    ConeheadZombie();
+};
+
+class ConeheadZombieInstance: public OrnZombieInstance1
+{
+public:
+    ConeheadZombieInstance(const Zombie *zombie);
+    virtual void playNormalballAudio();
+
+};
+
+class BucketheadZombie: public ConeheadZombie
+{
+    Q_DECLARE_TR_FUNCTIONS(BucketheadZombie)
+public:
+    BucketheadZombie();
+};
+
+class BucketheadZombieInstance: public OrnZombieInstance1
+{
+public:
+    BucketheadZombieInstance(const Zombie *zombie);
+    virtual void playNormalballAudio();
+
+};
+
+class PoleVaultingZombie: public Zombie1
+{
+    Q_DECLARE_TR_FUNCTIONS(PoleVaultingZombie)
+public:
+    PoleVaultingZombie();
 };
 
 Zombie *ZombieFactory(GameScene *scene, const QString &ename);

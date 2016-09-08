@@ -6,6 +6,7 @@
 #define PLANTS_VS_ZOMBIES_SELECTORSCENE_H
 
 #include <QtWidgets>
+#include <QtMultimedia>
 
 class HoverChangedPixmapItem;
 class MoviePixmapItem;
@@ -43,6 +44,9 @@ private:
     MoviePixmapItem *zombieHand;
     MouseEventRectItem *quitButton;
     TextItemWithoutBorder *usernameText;
+
+    QMediaPlayer *backgroundMusic;
+    QMediaPlayer *buttonBleep;
 };
 
 #endif //PLANTS_VS_ZOMBIES_MENUSCENE_H

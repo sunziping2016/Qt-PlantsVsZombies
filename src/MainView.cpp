@@ -42,9 +42,9 @@ MainView::MainView(MainWindow *mainWindow)
 MainView::~MainView()
 {
     if (selectorScene)
-        delete selectorScene;
+        selectorScene->deleteLater();
     if (gameScene)
-        delete gameScene;
+        gameScene->deleteLater();
 }
 
 QString MainView::getUsername() const
@@ -67,7 +67,7 @@ void MainView::switchToGameScene(const QString &eName)
     GameScene *newGameScene = new GameScene(GameLevelDataFactory(eName));
     setScene(newGameScene);
     if (gameScene)
-        delete gameScene;
+        gameScene->deleteLater();
     gameScene = newGameScene;
     gameScene->loadReady();
 }
@@ -77,7 +77,7 @@ void MainView::switchToMenuScene()
     SelectorScene *newSelectorScene = new SelectorScene;
     setScene(newSelectorScene);
     if (selectorScene)
-        delete(selectorScene);
+        selectorScene->deleteLater();
     selectorScene = newSelectorScene;
     selectorScene->loadReady();
 }

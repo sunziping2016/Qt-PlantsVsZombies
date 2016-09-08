@@ -15,6 +15,7 @@
 #include "MouseEventPixmapItem.h"
 #include "PlantCardItem.h"
 #include "Animate.h"
+#include <QtMultimedia>
 
 GameScene::GameScene(GameLevelData *gameLevelData)
         : QGraphicsScene(0, 0, 900, 600),
@@ -39,6 +40,15 @@ GameScene::GameScene(GameLevelData *gameLevelData)
           imgGrowSoil(new MoviePixmapItem("interface/GrowSoil.gif")),
           imgGrowSpray(new MoviePixmapItem("interface/GrowSpray.gif")),
           flagMeter(new FlagMeter(gameLevelData)),
+          backgroundMusic(new QMediaPlayer(this)),
+          tapMusic(new QMediaPlayer(this)),
+          sunMusic(new QMediaPlayer(this)),
+          shovelMusic(new QMediaPlayer(this)),
+          seedliftMusic(new QMediaPlayer(this)),
+          plantMusic1(new QMediaPlayer(this)),
+          plantMusic2(new QMediaPlayer(this)),
+          groanMusic(new QMediaPlayer(this)),
+          waveMusic(new QMediaPlayer(this)),
           coordinate(gameLevelData->coord),
           choose(0), sunNum(gameLevelData->sunNum),
           waveTimer(nullptr), waveNum(0)
@@ -55,7 +65,7 @@ GameScene::GameScene(GameLevelData *gameLevelData)
         QList<qreal> yPos;
         QList<Zombie *> zombies;
         for (const auto &zombieData: gameLevelData->zombieData) {
-            Zombie *item = zombieProtoTypes[zombieData.eName];
+            Zombie *item = getZombieProtoType(zombieData.eName);
             if(item->canDisplay) {
                 for (int i = 0; i < zombieData.num; ++i) {
                     yPos.push_back(qFloor(100 +  qrand() % 400));
@@ -167,6 +177,8 @@ GameScene::GameScene(GameLevelData *gameLevelData)
             connect(plantCardItem, &PlantCardItem::clicked, [this, item, plantCardItem] {
                 // Check
                 if (!plantCardItem->isChecked()) return;
+                tapMusic->stop();
+                tapMusic->play();
                 int count = selectedPlantArray.size();
                 if (this->gameLevelData->maxSelectedCards > 0 && count >= this->gameLevelData->maxSelectedCards)
                     return;
@@ -207,6 +219,8 @@ GameScene::GameScene(GameLevelData *gameLevelData)
                     });
                 };
                 *deselectConnnection = connect(selectedPlantCardItem, &PlantCardItem::clicked, [this, selectedPlantCardItem, deselectFunctor] {
+                    tapMusic->stop();
+                    tapMusic->play();
                     QList<QGraphicsItem *> selectedCards = cardPanel->childItems();
                     for (int i = qFind(selectedCards, selectedPlantCardItem) - selectedCards.begin() + 1; i != selectedCards.size(); ++i)
                         Animate(selectedCards[i]).move(QPointF(0, 60 * (i - 1))).speed(1).replace().finish();
@@ -216,6 +230,8 @@ GameScene::GameScene(GameLevelData *gameLevelData)
             });
             ++cardIndex;
         }
+        connect(selectCardButtonOkay, &MouseEventPixmapItem::clicked, [this] { tapMusic->stop(); tapMusic->play(); });
+        connect(selectCardButtonReset, &MouseEventPixmapItem::clicked, [this] { tapMusic->stop(); tapMusic->play(); });
         selectingPanel->setPos(100, -selectingPanel->boundingRect().height());
         addItem(selectingPanel);
     }
@@ -248,6 +264,16 @@ GameScene::GameScene(GameLevelData *gameLevelData)
     flagMeter->setPos(700, 610);
     addItem(flagMeter);
 
+    connect(backgroundMusic, &QMediaPlayer::stateChanged, [this](QMediaPlayer::State state) {
+        if (state == QMediaPlayer::StoppedState)
+            backgroundMusic->play();
+    });
+    tapMusic->setMedia(QUrl("qrc:/audio/tap.mp3"));
+    sunMusic->setMedia(QUrl("qrc:/audio/points.mp3"));
+    shovelMusic->setMedia(QUrl("qrc:/audio/shovel.mp3"));
+    seedliftMusic->setMedia(QUrl("qrc:/audio/seedlift.mp3"));
+    plantMusic1->setMedia(QUrl("qrc:/audio/plant1.mp3"));
+    plantMusic2->setMedia(QUrl("qrc:/audio/plant2.mp3"));
     // Plant Triggers & Zombie Rows
     for (int i = 0; i <= coordinate.rowCount(); ++i) {
         plantTriggers.push_back(QList<Trigger *>());
@@ -304,6 +330,8 @@ void GameScene::loadAcessFinished()
         }
     }
     if (gameLevelData->showScroll) {
+        backgroundMusic->setMedia(QUrl("qrc:/audio/Look_up_at_the_Sky.mp3"));
+        backgroundMusic->play();
         setInfoText(QString(tr("%1\' house")).arg(QSettings().value("Global/Username").toString()));
         (new Timer(this, 1000, [this]{
             setInfoText("");
@@ -425,7 +453,8 @@ void GameScene::letsGo()
             movePlant->setPixmap(staticGif);
             movePlant->setPos(event->scenePos() + delta);
             movePlant->setVisible(true);
-
+            seedliftMusic->stop();
+            seedliftMusic->play();
             choose = 1;
         }
         else if (shovel->contains(event->scenePos() - shovel->scenePos()) || shovelBackground->contains(event->scenePos() - shovelBackground->scenePos())) {
@@ -434,6 +463,8 @@ void GameScene::letsGo()
             shovel->setCursor(Qt::ArrowCursor);
             shovelBackground->setCursor(Qt::ArrowCursor);
             shovel->setPos(event->scenePos() - shovelBackground->scenePos() + delta);
+            shovelMusic->stop();
+            shovelMusic->play();
             choose = 2;
         }
         else
@@ -507,8 +538,17 @@ void GameScene::letsGo()
                     doCoolTime(i);
                     sunNum -= item->sunNum;
                     updateSunNum();
+                    // TODO: Plant Water music
+                    plantMusic1->stop();
+                    plantMusic2->stop();
+                    if (qrand() % 2)
+                        plantMusic1->play();
+                    else
+                        plantMusic2->play();
                 }
                 else {
+                    tapMusic->stop();
+                    tapMusic->play();
                     Animate(movePlant).move(cardGraphics[i].plantCard->scenePos() + QPointF(10, 0)).speed(1.5).finish([this] {
                         movePlant->setVisible(false);
                     });
@@ -524,17 +564,25 @@ void GameScene::letsGo()
                     if (prevPlant)
                         prevPlant->picture->setOpacity(1.0);
                 }
-                if (e->button() == Qt::LeftButton) {
-                    PlantInstance *plant = getPlant(e->scenePos());
-                    if (plant)
-                        plantDie(plant);
+                PlantInstance *plant;
+                if (e->button() == Qt::LeftButton && (plant = getPlant(e->scenePos()))) {
+                    plantDie(plant);
+                    plantMusic1->stop();
+                    plantMusic2->stop();
+                    plantMusic2->play();
+                }
+                else {
+                    tapMusic->stop();
+                    tapMusic->play();
                 }
             }
             choose = 0;
 
         });
     });
-
+    backgroundMusic->blockSignals(true);
+    backgroundMusic->stop();
+    backgroundMusic->blockSignals(false);
     gameLevelData->startGame(this);
 }
 
@@ -588,6 +636,8 @@ QPair<MoviePixmapItem *, std::function<void(bool)> > GameScene::newSun(int sunNu
         if (choose != 0) return;
         if (*timer)
             delete *timer;
+        sunMusic->stop();
+        sunMusic->play();
         Animate(sunGif).finish().move(QPointF(100, 0)).speed(1).scale(34.0 / 79.0).finish([this, sunGif, sunNum] {
             delete sunGif;
             this->sunNum += sunNum;
@@ -674,9 +724,7 @@ QPointF GameScene::sizeToPoint(const QSizeF &size)
 
 void GameScene::customSpecial(const QString &name, int col, int row)
 {
-    if (plantProtoTypes.find(name) == plantProtoTypes.end())
-        plantProtoTypes.insert(name, PlantFactory(this, name));
-    PlantInstance *plantInstance = PlantInstanceFactory(plantProtoTypes[name]);
+    PlantInstance *plantInstance = PlantInstanceFactory(getPlantProtoType(name));
     plantInstance->birth(col, row);
     plantInstances.push_back(plantInstance);
     auto key = qMakePair(col, row);
@@ -693,8 +741,24 @@ void GameScene::addToGame(QGraphicsItem *item)
 
 void GameScene::beginZombies()
 {
+    waveMusic->setMedia(QUrl("qrc:/audio/awooga.mp3"));
+    waveMusic->play();
     Animate(flagMeter).move(QPointF(700, 560)).speed(0.5).finish();
     advanceFlag();
+    QSharedPointer<std::function<void(void)> > playGroan(new std::function<void(void)>);
+    *playGroan = [this, playGroan] {
+        switch (qrand() % 6) {
+            case 0: groanMusic->setMedia(QUrl("qrc:/audio/groan1.mp3")); break;
+            case 1: groanMusic->setMedia(QUrl("qrc:/audio/groan2.mp3")); break;
+            case 2: groanMusic->setMedia(QUrl("qrc:/audio/groan3.mp3")); break;
+            case 3: groanMusic->setMedia(QUrl("qrc:/audio/groan4.mp3")); break;
+            case 4: groanMusic->setMedia(QUrl("qrc:/audio/groan5.mp3")); break;
+            default: groanMusic->setMedia(QUrl("qrc:/audio/groan6.mp3")); break;
+        }
+        groanMusic->play();
+        (new Timer(this, 20000, *playGroan))->start();
+    };
+    (new Timer(this, 20000, *playGroan))->start();
 }
 
 void GameScene::prepareGrowPlants(std::function<void(void)> functor)
@@ -717,13 +781,18 @@ void GameScene::prepareGrowPlants(std::function<void(void)> functor)
     addItem(imgGrow);
     addItem(imgPlants);
     imgPrepare->setVisible(true);
+    backgroundMusic->blockSignals(true);
+    backgroundMusic->stop();
+    backgroundMusic->blockSignals(false);
+    backgroundMusic->setMedia(QUrl("qrc:/audio/readysetplant.mp3"));
+    backgroundMusic->play();
     (new Timer(this, 600, [this, imgPrepare, imgGrow, imgPlants, functor] {
         delete imgPrepare;
         imgGrow->setVisible(true);
         (new Timer(this, 400, [this, imgGrow, imgPlants, functor] {
             delete imgGrow;
             imgPlants->setVisible(true);
-            (new Timer(this, 1000, [this, imgPlants, functor] {
+            (new Timer(this, 1200, [this, imgPlants, functor] {
                 delete imgPlants;
                 functor();
             }))->start();
@@ -780,17 +849,21 @@ void GameScene::selectFlagZombie(int levelSum)
     int timeout = 1500;
     QList<Zombie *> zombies, zombiesCandidate;
     if (gameLevelData->largeWaveFlag.contains(waveNum)) {
-        // Add flag zombie (j--)
+        waveMusic->setMedia(QUrl("qrc:/audio/siren.mp3"));
+        waveMusic->play();
+        Zombie *flagZombie = getZombieProtoType("oFlagZombie");
+        levelSum -= flagZombie->level;
+        zombies.push_back(flagZombie);
         timeout = 300;
     }
     for (const auto &zombieData: gameLevelData->zombieData) {
         if (zombieData.flagList.contains(levelSum)) {
-            Zombie *item = zombieProtoTypes[zombieData.eName];
+            Zombie *item = getZombieProtoType(zombieData.eName);
             levelSum -= item->level;
             zombies.push_back(item);
         }
-        if (zombieData.firstFlag <= levelSum) {
-            Zombie *item = zombieProtoTypes[zombieData.eName];
+        if (zombieData.firstFlag <= waveNum) {
+            Zombie *item = getZombieProtoType(zombieData.eName);
             for (int i = 0; i < zombieData.num; ++i)
                 zombiesCandidate.push_back(item);
         }
@@ -820,9 +893,9 @@ void GameScene::selectFlagZombie(int levelSum)
             zombieUuid.insert(zombieInstance->uuid, zombieInstance);
         }))->start();
     }
-    qDebug() << "Wave: " << waveNum << "\tLevel Sum: " << levelSum;
+    qDebug() << "Wave: " << waveNum;
     for (auto item: zombies)
-        qDebug() << "    " << item->cName;
+        qDebug() << "    " << item->eName;
 }
 
 QMap<int, PlantInstance *> GameScene::getPlant(int col, int row)
@@ -918,6 +991,29 @@ QList<ZombieInstance *> GameScene::getZombieOnRowRange(int row, qreal from, qrea
         if (zombie->hp > 0 && zombie->attackedLX < to && (zombie->attackedLX > from || zombie->attackedRX > from))
             zombies.push_back(zombie);
     return zombies;
+}
+
+Plant *GameScene::getPlantProtoType(const QString &eName)
+{
+    if (plantProtoTypes.find(eName) == plantProtoTypes.end())
+        plantProtoTypes.insert(eName, PlantFactory(this, eName));
+    return plantProtoTypes[eName];
+}
+
+Zombie *GameScene::getZombieProtoType(const QString &eName)
+{
+    if (zombieProtoTypes.find(eName) == zombieProtoTypes.end())
+        zombieProtoTypes.insert(eName, ZombieFactory(this, eName));
+    return zombieProtoTypes[eName];
+}
+
+void GameScene::beginBGM()
+{
+    backgroundMusic->blockSignals(true);
+    backgroundMusic->stop();
+    backgroundMusic->blockSignals(false);
+    backgroundMusic->setMedia(QUrl(gameLevelData->backgroundMusic));
+    backgroundMusic->play();
 }
 
 FlagMeter::FlagMeter(GameLevelData *gameLevelData)

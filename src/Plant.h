@@ -7,6 +7,7 @@
 
 #include <QtCore>
 #include <QtWidgets>
+#include <QtMultimedia>
 
 class MoviePixmapItem;
 class GameScene;
@@ -82,6 +83,7 @@ public:
     virtual void normalAttack(ZombieInstance *zombieInstance);
 private:
     QString bulletGif, bulletHitGif;
+    QMediaPlayer *firePea;
 };
 
 class SnowPea: public Peashooter

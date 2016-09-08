@@ -72,6 +72,8 @@
         <file>images/Card/Zombies/Zombie.png</file>
         <file>images/Zombies/Zombie/0.gif</file>
         <file>images/Zombies/Zombie/Zombie.gif</file>
+        <file>images/Zombies/Zombie/Zombie2.gif</file>
+        <file>images/Zombies/Zombie/Zombie3.gif</file>
         <file>images/Zombies/Zombie/ZombieAttack.gif</file>
         <file>images/Zombies/Zombie/ZombieLostHead.gif</file>
         <file>images/Zombies/Zombie/ZombieLostHeadAttack.gif</file>
@@ -79,7 +81,60 @@
         <file>images/Zombies/Zombie/ZombieDie.gif</file>
         <file>images/Zombies/Zombie/BoomDie.gif</file>
         <file>images/Zombies/Zombie/1.gif</file>
+        <file>images/Zombies/Zombie/2.gif</file>
+        <file>images/Zombies/Zombie/3.gif</file>
+        <!-- Flag Zombie -->
+        <file>images/Card/Zombies/FlagZombie.png</file>
+        <file>images/Zombies/FlagZombie/0.gif</file>
+        <file>images/Zombies/FlagZombie/FlagZombie.gif</file>
+        <file>images/Zombies/FlagZombie/FlagZombieAttack.gif</file>
+        <file>images/Zombies/FlagZombie/FlagZombieLostHead.gif</file>
+        <file>images/Zombies/FlagZombie/FlagZombieLostHeadAttack.gif</file>
+        <file>images/Zombies/FlagZombie/1.gif</file>
+        <!-- Conehead Zombie -->
+        <file>images/Card/Zombies/ConeheadZombie.png</file>
+        <file>images/Zombies/ConeheadZombie/0.gif</file>
+        <file>images/Zombies/ConeheadZombie/ConeheadZombie.gif</file>
+        <file>images/Zombies/ConeheadZombie/ConeheadZombieAttack.gif</file>
+        <file>images/Zombies/ConeheadZombie/1.gif</file>
+        <!-- Buckethead Zombie -->
+        <file>images/Card/Zombies/BucketheadZombie.png</file>
+        <file>images/Zombies/BucketheadZombie/0.gif</file>
+        <file>images/Zombies/BucketheadZombie/BucketheadZombie.gif</file>
+        <file>images/Zombies/BucketheadZombie/BucketheadZombieAttack.gif</file>
+        <file>images/Zombies/BucketheadZombie/1.gif</file>
         <!-- Translations -->
         <file>translations/main.zh_CN.qm</file>
+        <!-- Music -->
+        <file>audio/Faster.mp3</file>
+        <file>audio/bleep.mp3</file>
+        <file>audio/tap.mp3</file>
+        <file>audio/losemusic.mp3</file>
+        <file>audio/Look_up_at_the_Sky.mp3</file>
+        <file>audio/UraniwaNi.mp3</file>
+        <file>audio/readysetplant.mp3</file>
+        <file>audio/points.mp3</file>
+        <file>audio/shovel.mp3</file>
+        <file>audio/seedlift.mp3</file>
+        <file>audio/plant1.mp3</file>
+        <file>audio/plant2.mp3</file>
+        <file>audio/awooga.mp3</file>
+        <file>audio/siren.mp3</file>
+        <file>audio/groan1.mp3</file>
+        <file>audio/groan2.mp3</file>
+        <file>audio/groan3.mp3</file>
+        <file>audio/groan4.mp3</file>
+        <file>audio/groan5.mp3</file>
+        <file>audio/groan6.mp3</file>
+        <file>audio/lawnmower.mp3</file>
+        <file>audio/firepea.mp3</file>
+        <file>audio/splat1.mp3</file>
+        <file>audio/splat2.mp3</file>
+        <file>audio/splat3.mp3</file>
+        <file>audio/chomp.mp3</file>
+        <file>audio/chompsoft.mp3</file>
+        <file>audio/plastichit.mp3</file>
+        <file>audio/shieldhit.mp3</file>
+        <file>audio/shieldhit2.mp3</file>
     </qresource>
 </RCC>

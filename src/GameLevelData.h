@@ -45,6 +45,8 @@ public:
 
     QList<ZombieData> zombieData;
 
+    QString backgroundMusic;
+
     virtual void loadAccess(GameScene *gameScene);
     virtual void initLawnMower(GameScene *gameScene);
     virtual void startGame(GameScene *gameScene);
