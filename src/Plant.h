@@ -81,9 +81,6 @@ class PeashooterInstance: public PlantInstance
 public:
     PeashooterInstance(const Plant *plant);
     virtual void normalAttack(ZombieInstance *zombieInstance);
-private:
-    QString bulletGif, bulletHitGif;
-    QMediaPlayer *firePea;
 };
 
 class SnowPea: public Peashooter
@@ -91,6 +88,13 @@ class SnowPea: public Peashooter
     Q_DECLARE_TR_FUNCTIONS(SnowPea)
 public:
     SnowPea();
+};
+
+class SnowPeaInstance: public PlantInstance
+{
+public:
+    SnowPeaInstance(const Plant *plant);
+    virtual void normalAttack(ZombieInstance *zombieInstance);
 };
 
 class SunFlower: public Plant
@@ -163,9 +167,63 @@ private:
 
     GameScene *scene;
     int count, type, row, direction;
+    QUuid uuid;
     qreal from;
     QGraphicsPixmapItem *picture;
 };
+
+class PumpkinHead: public Plant
+{
+    Q_DECLARE_TR_FUNCTIONS(PumpkinHead)
+public:
+    PumpkinHead();
+    virtual double getDY(int x, int y) const;
+    virtual bool canGrow(int x, int y) const;
+};
+
+class PumpkinHeadInstance: public PlantInstance
+{
+public:
+    PumpkinHeadInstance(const Plant *plant);
+    virtual ~PumpkinHeadInstance();
+    virtual void birth(int c, int r);
+    virtual void getHurt(ZombieInstance *zombie, int aKind, int attack);
+
+    int hurtStatus;
+    MoviePixmapItem *picture2;
+};
+
+class Torchwood: public Plant
+{
+    Q_DECLARE_TR_FUNCTIONS(Torchwood)
+public:
+    Torchwood();
+};
+
+class TorchwoodInstance: public PlantInstance
+{
+public:
+    TorchwoodInstance(const Plant *plant);
+    virtual void initTrigger();
+};
+
+class TallNut: public WallNut
+{
+    Q_DECLARE_TR_FUNCTIONS(TallNut)
+public:
+    TallNut();
+    virtual bool canGrow(int x, int y) const;
+};
+
+class TallNutInstance: public WallNutInstance
+{
+public:
+    TallNutInstance(const Plant *plant);
+    virtual void getHurt(ZombieInstance *zombie, int aKind, int attack);
+private:
+    int hurtStatus;
+};
+
 
 Plant *PlantFactory(GameScene *scene, const QString &eName);
 PlantInstance *PlantInstanceFactory(const Plant *plant);

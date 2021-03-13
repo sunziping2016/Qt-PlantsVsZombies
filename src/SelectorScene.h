@@ -24,7 +24,6 @@ public:
 class SelectorScene: public QGraphicsScene
 {
     Q_OBJECT
-
 public:
     SelectorScene();
     virtual bool eventFilter(QObject *watched, QEvent *event) override;
@@ -46,7 +45,6 @@ private:
     TextItemWithoutBorder *usernameText;
 
     QMediaPlayer *backgroundMusic;
-    QMediaPlayer *buttonBleep;
 };
 
 #endif //PLANTS_VS_ZOMBIES_MENUSCENE_H

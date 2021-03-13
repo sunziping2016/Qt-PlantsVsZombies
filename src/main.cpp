@@ -5,6 +5,7 @@
 #include <QtCore>
 #include <QtWidgets>
 #include "MainView.h"
+#include "SelectorScene.h"
 #include "ImageManager.h"
 
 int main(int argc, char * *argv)
@@ -17,14 +18,14 @@ int main(int argc, char * *argv)
     // For Translators
     QTranslator appTranslator;
     // TODO: change translation back after debugging
-    appTranslator.load(QString(":/translations/main.%1.qm").arg(QLocale::system().name()));
-    //appTranslator.load(QString(":/translations/main.%1.qm").arg("zh_CN"));
+    //appTranslator.load(QString(":/translations/main.%1.qm").arg(QLocale::system().name()));
+    appTranslator.load(QString(":/translations/main.%1.qm").arg("zh_CN"));
     app.installTranslator(&appTranslator);
 
     InitImageManager();
     qsrand((uint) QTime::currentTime().msec());
     MainWindow mainWindow;
-    gMainView->switchToMenuScene();
+    gMainView->switchToScene(new SelectorScene);
     mainWindow.show();
     int res = app.exec();
     DestoryImageManager();

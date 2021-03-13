@@ -20,7 +20,7 @@ TimeLine::TimeLine(QObject *parent, int duration, int interval, std::function<vo
         int i = 1;
         ++i;
     }
-    setUpdateInterval(interval);
+    setUpdateInterval(40);
     setCurveShape(shape);
     connect(this, &TimeLine::valueChanged, onChanged);
     connect(this, &TimeLine::finished, [this, onFinished] { onFinished(); deleteLater(); });

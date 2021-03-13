@@ -9,6 +9,7 @@
 #include <QtCore>
 #include <QtWidgets>
 #include <QtMultimedia>
+#include "Plant.h"
 
 class MoviePixmapItem;
 class GameScene;
@@ -38,7 +39,6 @@ public:
     qreal coolTime;
 
     virtual bool canPass(int row) const;
-
     void update();
 
     GameScene *scene;
@@ -84,14 +84,22 @@ public:
     virtual void normalAttack(PlantInstance *plant);
     virtual void crushDie();
     virtual void getPea(int attack, int direction);
+    virtual void getSnowPea(int attack, int direction);
+    virtual void getFirePea(int attack, int direction);
     virtual void getHit(int attack);
     virtual void autoReduceHp();
     virtual void normalDie();
     virtual void playNormalballAudio();
+    virtual void playSlowballAudio();
+    virtual void playFireballAudio();
+    virtual QPointF getShadowPos();
+    virtual QPointF getDieingHeadPos();
+    virtual bool getCrushed(PlantInstance *instance);
 
     QUuid uuid;
     int hp;
-    qreal speed;
+    qreal speed, orignSpeed;
+    int attack, orignAttack;
     int altitude;
     bool beAttacked, isAttacking, goingDie;
 
@@ -100,11 +108,12 @@ public:
     int row;
     const Zombie *zombieProtoType;
 
-    QString normalGif, attackGif;
+    QString normalGif, attackGif, lostHeadGif, lostHeadAttackGif;
 
+
+    QTimer *frozenTimer;
     QGraphicsPixmapItem *shadowPNG;
     MoviePixmapItem *picture;
-    QMediaPlayer *attackMusic, *hitMusic;
 };
 
 class OrnZombie1: public Zombie1
@@ -161,7 +170,25 @@ class PoleVaultingZombie: public Zombie1
     Q_DECLARE_TR_FUNCTIONS(PoleVaultingZombie)
 public:
     PoleVaultingZombie();
+
+    QString walkGif, lostHeadWalkGif, jumpGif1, jumpGif2;
 };
+
+class PoleVaultingZombieInstance: public ZombieInstance
+{
+    Q_DECLARE_TR_FUNCTIONS(PoleVaultingZombieInstance)
+public:
+    PoleVaultingZombieInstance(const Zombie *zombie);
+    virtual QPointF getShadowPos();
+    virtual QPointF getDieingHeadPos();
+    virtual void judgeAttack();
+    virtual void normalAttack(PlantInstance *plantInstance);
+    const PoleVaultingZombie *getZombieProtoType();
+    // TODO: getFreeze
+    bool judgeAttackOrig, lostPole, beginCrushed;
+    qreal posX; // Just forward message to normalAttack
+};
+
 
 Zombie *ZombieFactory(GameScene *scene, const QString &ename);
 ZombieInstance *ZombieInstanceFactory(const Zombie *zombie);

@@ -13,7 +13,6 @@ MainView *gMainView;
 MainView::MainView(MainWindow *mainWindow)
         : width(900), height(600),
           usernameSettingEntry("Global/Username"),
-          selectorScene(nullptr), gameScene(nullptr),
           mainWindow(mainWindow)
 {
     gMainView = this;
@@ -41,10 +40,8 @@ MainView::MainView(MainWindow *mainWindow)
 
 MainView::~MainView()
 {
-    if (selectorScene)
-        selectorScene->deleteLater();
-    if (gameScene)
-        gameScene->deleteLater();
+    if (scene())
+        scene()->deleteLater();
 }
 
 QString MainView::getUsername() const
@@ -62,24 +59,14 @@ MainWindow *MainView::getMainWindow() const
     return mainWindow;
 }
 
-void MainView::switchToGameScene(const QString &eName)
+void MainView::switchToScene(QGraphicsScene *scene)
 {
-    GameScene *newGameScene = new GameScene(GameLevelDataFactory(eName));
-    setScene(newGameScene);
-    if (gameScene)
-        gameScene->deleteLater();
-    gameScene = newGameScene;
-    gameScene->loadReady();
-}
-
-void MainView::switchToMenuScene()
-{
-    SelectorScene *newSelectorScene = new SelectorScene;
-    setScene(newSelectorScene);
-    if (selectorScene)
-        selectorScene->deleteLater();
-    selectorScene = newSelectorScene;
-    selectorScene->loadReady();
+    QGraphicsScene *oldScene = nullptr;
+    if (this->scene())
+        oldScene = this->scene();
+    setScene(scene);
+    if (oldScene)
+        oldScene->deleteLater();
 }
 
 void MainView::resizeEvent(QResizeEvent *event)
@@ -114,7 +101,8 @@ MainWindow::MainWindow()
             setWindowState(Qt::WindowNoState);
         QSettings().setValue(fullScreenSettingEntry, checked);
     });
-    fullScreenAction->setChecked(QSettings().value(fullScreenSettingEntry, false).toBool());
+    // Buggy on windows
+    //fullScreenAction->setChecked(QSettings().value(fullScreenSettingEntry, false).toBool());
     // Set background color to black
     setPalette(Qt::black);
     setAutoFillBackground(true);

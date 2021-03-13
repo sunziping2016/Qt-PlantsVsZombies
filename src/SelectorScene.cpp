@@ -6,6 +6,8 @@
 #include "MainView.h"
 #include "MouseEventPixmapItem.h"
 #include "ImageManager.h"
+#include "GameLevelData.h"
+#include "GameScene.h"
 
 TextItemWithoutBorder::TextItemWithoutBorder(const QString &text, QGraphicsItem *parent)
         : QGraphicsTextItem(text, parent)
@@ -33,8 +35,7 @@ SelectorScene::SelectorScene()
           zombieHand      (new MoviePixmapItem        ("interface/SelectorZombieHand.gif")),
           quitButton      (new MouseEventRectItem     (QRectF(0, 0, 79, 53))),
           usernameText    (new TextItemWithoutBorder  (gMainView->getUsername())),
-          backgroundMusic(new QMediaPlayer(this)),
-          buttonBleep(new QMediaPlayer(this))
+          backgroundMusic(new QMediaPlayer(this))
 {
     addItem(background);
 
@@ -69,21 +70,17 @@ SelectorScene::SelectorScene()
     usernameText->setTextInteractionFlags(Qt::TextEditorInteraction);
 
     backgroundMusic->setMedia(QUrl("qrc:/audio/Faster.mp3"));
-    buttonBleep->setMedia(QUrl("qrc:/audio/bleep.mp3"));
 
     connect(backgroundMusic, &QMediaPlayer::stateChanged, [this](QMediaPlayer::State state) {
         if (state == QMediaPlayer::StoppedState)
             backgroundMusic->play();
     });
 
-    connect(adventureButton, &HoverChangedPixmapItem::hoverEntered, [this] { buttonBleep->stop(); buttonBleep->play(); });
-    connect(survivalButton, &HoverChangedPixmapItem::hoverEntered, [this] { buttonBleep->stop(); buttonBleep->play(); });
-    connect(challengeButton, &HoverChangedPixmapItem::hoverEntered, [this] { buttonBleep->stop(); buttonBleep->play(); });
+    connect(adventureButton, &HoverChangedPixmapItem::hoverEntered, [] { QSound::play(":/audio/bleep.wav"); });
+    connect(survivalButton, &HoverChangedPixmapItem::hoverEntered, [] { QSound::play(":/audio/bleep.wav"); });
+    connect(challengeButton, &HoverChangedPixmapItem::hoverEntered, [] { QSound::play(":/audio/bleep.wav"); });
 
-    QMediaPlayer *loseMusic = new QMediaPlayer(this);
-    loseMusic->setMedia(QUrl("qrc:/audio/losemusic.mp3"));
-
-    connect(adventureButton, &HoverChangedPixmapItem::clicked, zombieHand, [this, loseMusic] {
+    connect(adventureButton, &HoverChangedPixmapItem::clicked, zombieHand, [this] {
         adventureButton->setCursor(Qt::ArrowCursor);
         survivalButton->setCursor(Qt::ArrowCursor);
         challengeButton->setCursor(Qt::ArrowCursor);
@@ -94,19 +91,25 @@ SelectorScene::SelectorScene()
         woodSign3->setEnabled(false);
 
         zombieHand->start();
-        backgroundMusic->pause();
-        loseMusic->play();
-
+        backgroundMusic->blockSignals(true);
+        backgroundMusic->stop();
+        backgroundMusic->blockSignals(false);
+        backgroundMusic->setMedia(QUrl("qrc:/audio/losemusic.mp3"));
+        backgroundMusic->play();
     });
-    connect(zombieHand, &MoviePixmapItem::finished, [this, loseMusic] {
-        (new Timer(this, 2500, [this, loseMusic](){
-            loseMusic->stop();
-            gMainView->switchToGameScene(QSettings().value("Global/NextLevel", "1").toString());
+    connect(zombieHand, &MoviePixmapItem::finished, [this] {
+        (new Timer(this, 2500, [this](){
+            backgroundMusic->blockSignals(true);
+            backgroundMusic->stop();
+            backgroundMusic->blockSignals(false);
+            gMainView->switchToScene(new GameScene(GameLevelDataFactory(QSettings().value("Global/NextLevel", "1").toString())));
         }))->start();
     });
     connect(quitButton, &MouseEventRectItem::clicked, [] {
         gMainView->getMainWindow()->close();
     });
+
+    loadReady();
 }
 
 bool SelectorScene::eventFilter(QObject *watched, QEvent *event)

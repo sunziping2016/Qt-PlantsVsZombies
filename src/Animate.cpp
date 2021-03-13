@@ -4,12 +4,12 @@
 
 #include "Animate.h"
 
-Animate::Animate(QGraphicsItem *item)
+Animate::Animate(QGraphicsItem *item, QGraphicsScene *scene)
         : type(0),
           m_duration(0), m_speed(0),
           toPos(), toScale(0), toOpacity(0),
           m_shape(QTimeLine::EaseInOutCurve),
-          item(item)
+          item(item), scene(scene)
 {}
 
 Animate &Animate::move(QPointF toPos)
@@ -105,6 +105,7 @@ Animate &Animate::finish(std::function<void(bool)> functor)
             delete animation;
         }
         animation = new Animation;
+        animation->scene = scene;
         animation->frames.push_back({type, m_duration, m_speed, toPos, toScale, toOpacity, functor, m_shape});
         setAnimation(item, animation);
         generateAnimation(item);
@@ -161,8 +162,7 @@ void Animate::generateAnimation(QGraphicsItem *item)
         }
     }
     else {
-        animation->anim = new QTimeLine;
-        animation->anim->setDuration(keyFrame.duration);
+        animation->anim = new QTimeLine(keyFrame.duration, animation->scene);
         animation->anim->setUpdateInterval(20);
         animation->anim->setCurveShape(keyFrame.shape);
         QObject::connect(animation->anim, &QTimeLine::valueChanged, [item, fromPos, toPos, fromScale, toScale, fromOpacity, toOpacity, move, scale, fade](qreal x) {

@@ -144,6 +144,18 @@ Peashooter::Peashooter()
     toolTip = tr("Shoots peas at zombies");
 }
 
+
+PeashooterInstance::PeashooterInstance(const Plant *plant)
+        : PlantInstance(plant)
+{
+}
+
+void PeashooterInstance::normalAttack(ZombieInstance *zombieInstance)
+{
+    QSound::play(":/audio/firepea.wav");
+    (new Bullet(plantProtoType->scene, 0, row, attackedLX, attackedLX - 40, picture->y() + 3, picture->zValue() + 2, 0))->start();
+}
+
 SnowPea::SnowPea()
 {
     eName = "oSnowPea";
@@ -155,6 +167,18 @@ SnowPea::SnowPea()
     staticGif = "Plants/SnowPea/0.gif";
     normalGif = "Plants/SnowPea/SnowPea.gif";
     toolTip = tr("Slows down zombies with cold precision");
+}
+
+
+SnowPeaInstance::SnowPeaInstance(const Plant *plant)
+        : PlantInstance(plant)
+{
+}
+
+void SnowPeaInstance::normalAttack(ZombieInstance *zombieInstance)
+{
+    QSound::play(":/audio/firepea.wav");
+    (new Bullet(plantProtoType->scene, -1, row, attackedLX, attackedLX - 40, picture->y() + 3, picture->zValue() + 2, 0))->start();
 }
 
 SunFlower::SunFlower()
@@ -193,7 +217,7 @@ void SunFlowerInstance::initTrigger()
                     sunGif->setScale(0.6);
                     sunGif->setPos(fromX, toY - 25);
                     sunGif->start();
-                    Animate(sunGif).move(QPointF((fromX + toX) / 2, toY - 50)).scale(0.9).speed(0.2).shape(
+                    Animate(sunGif, plantProtoType->scene).move(QPointF((fromX + toX) / 2, toY - 50)).scale(0.9).speed(0.2).shape(
                                     QTimeLine::EaseOutCurve).finish()
                             .move(QPointF(toX, toY)).scale(1.0).speed(0.2).shape(QTimeLine::EaseInCurve).finish(
                                     onFinished);
@@ -227,14 +251,13 @@ bool WallNut::canGrow(int x, int y) const
 {
    if (x < 1 || x > 9 || y < 1 || y > 5)
         return false;
-    if (scene->isCrater(x, y) || scene->isTombstone(x, y))
-        return false;
-    int groundType = scene->getGameLevelData()->LF[y];
-    QMap<int, PlantInstance *> plants = scene->getPlant(x, y);
-    if (groundType == 1)
-        return !plants.contains(1) || plants[1]->plantProtoType->eName == "oWallNut";
-    return plants.contains(0) && (!plants.contains(1) || plants[1]->plantProtoType->eName == "oWallNut");
-
+   if (scene->isCrater(x, y) || scene->isTombstone(x, y))
+       return false;
+   int groundType = scene->getGameLevelData()->LF[y];
+   QMap<int, PlantInstance *> plants = scene->getPlant(x, y);
+   if (groundType == 1)
+       return !plants.contains(1) || plants[1]->plantProtoType->eName == "oWallNut";
+   return plants.contains(0) && (!plants.contains(1) || plants[1]->plantProtoType->eName == "oWallNut");
 }
 
 LawnCleaner::LawnCleaner()
@@ -313,13 +336,12 @@ void LawnCleanerInstance::triggerCheck(ZombieInstance *zombieInstance, Trigger *
 
 void LawnCleanerInstance::normalAttack(ZombieInstance *zombieInstance)
 {
-    QMediaPlayer *player = new QMediaPlayer(plantProtoType->scene);
-    player->setMedia(QUrl("qrc:/audio/lawnmower.mp3"));
-    player->play();
+    QSound::play(":/audio/lawnmower.wav");
     QSharedPointer<std::function<void(void)> > crush(new std::function<void(void)>);
     *crush = [this, crush] {
         for (auto zombie: plantProtoType->scene->getZombieOnRowRange(row, attackedLX, attackedRX)) {
-            zombie->crushDie();
+            if (zombie->getCrushed(this))
+                zombie->crushDie();
         }
         if (attackedLX > 900)
             plantProtoType->scene->plantDie(this);
@@ -331,18 +353,6 @@ void LawnCleanerInstance::normalAttack(ZombieInstance *zombieInstance)
         }
     };
     (*crush)();
-}
-
-PeashooterInstance::PeashooterInstance(const Plant *plant)
-    : PlantInstance(plant), firePea(new QMediaPlayer(picture))
-{
-    firePea->setMedia(QUrl("qrc:/audio/firepea.mp3"));
-}
-
-void PeashooterInstance::normalAttack(ZombieInstance *zombieInstance)
-{
-    firePea->play();
-    (new Bullet(plantProtoType->scene, 0, row, attackedLX, attackedLX - 40, picture->y() + 3, picture->zValue() + 2, 0))->start();
 }
 
 Bullet::Bullet(GameScene *scene, int type, int row, qreal from, qreal x, qreal y, qreal zvalue, int direction)
@@ -361,19 +371,20 @@ Bullet::~Bullet()
 
 void Bullet::start()
 {
-    (new Timer(scene, 10, [this] {
+    (new Timer(scene, 20, [this] {
         move();
     }))->start();
 }
 
 void Bullet::move()
 {
-    if (count++ == 10)
+    if (count++ == 5)
         scene->addItem(picture);
     int col = scene->getCoordinate().getCol(from);
     QMap<int, PlantInstance *> plants = scene->getPlant(col, row);
-    if (type < 1 && plants.contains(1) && plants[1]->plantProtoType->eName == "oTorchwood") {
+    if (type < 1 && plants.contains(1) && plants[1]->plantProtoType->eName == "oTorchwood" && uuid != plants[1]->uuid) {
         ++type;
+        uuid = plants[1]->uuid;
         picture->setPixmap(gImageCache->load(QString("Plants/PB%1%2.gif").arg(type).arg(direction)));
     }
     ZombieInstance *zombie = nullptr;
@@ -388,8 +399,12 @@ void Bullet::move()
     }
     // TODO: another direction
     if (zombie && zombie->altitude == 1) {
-        // TODO: other attacks
-        zombie->getPea(20, direction);
+        if (type == 0)
+            zombie->getPea(20, direction);
+        else if(type == -1)
+            zombie->getSnowPea(20, direction);
+        if (type == 1)
+            zombie->getFirePea(40, direction);
         picture->setPos(picture->pos() + QPointF(28, 0));
         picture->setPixmap(gImageCache->load("Plants/PeaBulletHit.gif"));
         (new Timer(scene, 100, [this] {
@@ -397,10 +412,10 @@ void Bullet::move()
         }))->start();
     }
     else {
-        from += direction ? -5 : 5;
+        from += direction ? -10 : 10;
         if (from < 900 && from > 100) {
-            picture->setPos(picture->pos() + QPointF(direction ? -5 : 5, 0));
-            (new Timer(scene, 10, [this] {
+            picture->setPos(picture->pos() + QPointF(direction ? -10 : 10, 0));
+            (new Timer(scene, 20, [this] {
                 move();
             }))->start();
         }
@@ -408,6 +423,174 @@ void Bullet::move()
             delete this;
     }
 }
+
+PumpkinHead::PumpkinHead()
+{
+    eName = "oPumpkinHead";
+    cName = tr("Pumpkin Head");
+    beAttackedPointL = 15;
+    beAttackedPointR = 82;
+    sunNum = 125;
+    pKind = 2;
+    hp = 4000;
+    coolTime = 30;
+    zIndex = 1;
+    toolTip = tr("Protects the plant inside it");
+    cardGif = "Card/Plants/PumpkinHead.png";
+    staticGif = "Plants/PumpkinHead/0.gif";
+    normalGif = "Plants/PumpkinHead/PumpkinHead1.gif";
+}
+
+bool PumpkinHead::canGrow(int x, int y) const
+{
+    QMap<int, PlantInstance *> plants = scene->getPlant(x, y);
+    if (plants.contains(pKind))
+        return true;
+    if (x < 1 || x > 9 || y < 1 || y > 5)
+        return false;
+    if (scene->isCrater(x, y) || scene->isTombstone(x, y))
+        return false;
+    int groundType = scene->getGameLevelData()->LF[y];
+    if (groundType == 2)
+        return plants.contains(0);
+    return true;
+}
+
+double PumpkinHead::getDY(int x, int y) const
+{
+    return scene->getPlant(x, y).contains(0) ? -12 : -5;
+}
+
+PumpkinHeadInstance::PumpkinHeadInstance(const Plant *plant)
+    : PlantInstance(plant), picture2(new MoviePixmapItem)
+{
+    hurtStatus = 0;
+}
+
+void PumpkinHeadInstance::birth(int c, int r)
+{
+    Coordinate &coordinate = plantProtoType->scene->getCoordinate();
+    double x = coordinate.getX(c) + plantProtoType->getDX(), y = coordinate.getY(r) + plantProtoType->getDY(c, r) - plantProtoType->height;
+    col = c, row = r;
+    attackedLX = x + plantProtoType->beAttackedPointL;
+    attackedRX = x + plantProtoType->beAttackedPointR;
+    picture->setMovie(plantProtoType->normalGif);
+    picture->setPos(x, y);
+    picture->setZValue(plantProtoType->zIndex + 3 * r);
+    shadowPNG = new QGraphicsPixmapItem(gImageCache->load("interface/plantShadow.png"));
+    shadowPNG->setPos(plantProtoType->width * 0.5 - 48, plantProtoType->height - 22);
+    shadowPNG->setFlag(QGraphicsItem::ItemStacksBehindParent);
+    shadowPNG->setParentItem(picture);
+    picture->start();
+    plantProtoType->scene->addToGame(picture);
+    picture2->setMovie("Plants/PumpkinHead/PumpkinHead2.gif");
+    picture2->setPos(picture->pos());
+    picture2->setZValue(picture->zValue() - 2);
+    plantProtoType->scene->addToGame(picture2);
+    picture2->start();
+}
+
+void PumpkinHeadInstance::getHurt(ZombieInstance *zombie, int aKind, int attack)
+{
+    PlantInstance::getHurt(zombie, aKind, attack);
+    if (hp > 0) {
+        if (hp < 1334) {
+            if (hurtStatus < 2) {
+                hurtStatus = 2;
+                picture->setMovie("Plants/PumpkinHead/pumpkin_damage2.gif");
+                picture->start();
+            }
+        }
+        else if (hp < 2667) {
+            if (hurtStatus < 1) {
+                hurtStatus = 1;
+                picture->setMovie("Plants/PumpkinHead/pumpkin_damage1.gif");
+                picture->start();
+                picture2->setMovie("Plants/PumpkinHead/Pumpkin_back.gif");
+                picture2->start();
+            }
+        }
+    }
+}
+
+PumpkinHeadInstance::~PumpkinHeadInstance()
+{
+    picture2->deleteLater();
+}
+
+Torchwood::Torchwood()
+{
+    eName = "oTorchwood";
+    cName = tr("Torchwood");
+    beAttackedPointR = 53;
+    sunNum = 175;
+    toolTip = tr("Turns peas that pass through them into fireballs");
+    cardGif = "Card/Plants/Torchwood.png";
+    staticGif = "Plants/Torchwood/0.gif";
+    normalGif = "Plants/Torchwood/Torchwood.gif";
+}
+
+TorchwoodInstance::TorchwoodInstance(const Plant *plant)
+    : PlantInstance(plant)
+{}
+
+void TorchwoodInstance::initTrigger()
+{}
+
+TallNut::TallNut()
+{
+    eName = "oTallNut";
+    cName = tr("Tall Nut");
+    beAttackedPointR = 63;
+    sunNum = 125;
+    hp = 8000;
+    toolTip = tr("Heavy-duty wall plants that can't be vaulted or jumped over");
+    cardGif = "Card/Plants/TallNut.png";
+    staticGif = "Plants/TallNut/0.gif";
+    normalGif = "Plants/TallNut/TallNut.gif";
+    stature = 1;
+}
+
+bool TallNut::canGrow(int x, int y) const
+{
+    if (x < 1 || x > 9 || y < 1 || y > 5)
+        return false;
+    if (scene->isCrater(x, y) || scene->isTombstone(x, y))
+        return false;
+    int groundType = scene->getGameLevelData()->LF[y];
+    QMap<int, PlantInstance *> plants = scene->getPlant(x, y);
+    if (groundType == 1)
+        return !plants.contains(1) || plants[1]->plantProtoType->eName == "oTallNut";
+    return plants.contains(0) && (!plants.contains(1) || plants[1]->plantProtoType->eName == "oTallNut");
+}
+
+void TallNutInstance::getHurt(ZombieInstance *zombie, int aKind, int attack)
+{
+    PlantInstance::getHurt(zombie, aKind, attack);
+    if (hp > 0) {
+        if (hp < 1334) {
+            if (hurtStatus < 2) {
+                hurtStatus = 2;
+                picture->setMovie("Plants/TallNut/TallnutCracked2.gif");
+                picture->start();
+            }
+        }
+        else if (hp < 2667) {
+            if (hurtStatus < 1) {
+                hurtStatus = 1;
+                picture->setMovie("Plants/TallNut/TallnutCracked1.gif");
+                picture->start();
+            }
+        }
+    }
+}
+
+TallNutInstance::TallNutInstance(const Plant *plant)
+    : WallNutInstance(plant)
+{
+    hurtStatus = 0;
+}
+
 
 Plant *PlantFactory(GameScene *scene, const QString &eName)
 {
@@ -424,6 +607,12 @@ Plant *PlantFactory(GameScene *scene, const QString &eName)
         plant = new LawnCleaner;
     else if (eName == "oPoolCleaner")
         plant = new PoolCleaner;
+    else if (eName == "oPumpkinHead")
+        plant = new PumpkinHead;
+    else if (eName == "oTorchwood")
+        plant = new Torchwood;
+    else if (eName == "oTallNut")
+        plant = new TallNut;
     if (plant) {
         plant->scene = scene;
         plant->update();
@@ -435,14 +624,19 @@ PlantInstance *PlantInstanceFactory(const Plant *plant)
 {
     if (plant->eName == "oPeashooter")
         return new PeashooterInstance(plant);
+    if (plant->eName == "oSnowPea")
+        return new SnowPeaInstance(plant);
     if (plant->eName == "oSunflower")
         return new SunFlowerInstance(plant);
     if (plant->eName == "oWallNut")
         return new WallNutInstance(plant);
     if (plant->eName == "oLawnCleaner")
         return new LawnCleanerInstance(plant);
+    if (plant->eName == "oPumpkinHead")
+        return new PumpkinHeadInstance(plant);
+    if (plant->eName == "oTorchwood")
+        return new TorchwoodInstance(plant);
+    if (plant->eName == "oTallNut")
+        return new TallNutInstance(plant);
     return new PlantInstance(plant);
 }
-
-
-

@@ -35,7 +35,7 @@ void GameLevelData::startGame(GameScene *gameScene)
         gameScene->beginMonitor();
         gameScene->beginCool();
         gameScene->beginSun(25);
-        (new Timer(gameScene, 3000/*15000*/, [gameScene] {
+        (new Timer(gameScene, 15000, [gameScene] {
             gameScene->beginZombies();
         }))->start();
     });
@@ -61,16 +61,17 @@ GameLevelData_1::GameLevelData_1()
 {
     backgroundImage = "interface/background1.jpg";
     backgroundMusic = "qrc:/audio/UraniwaNi.mp3";
-    sunNum = 100;
+    sunNum = 50;
     canSelectCard = true;
     showScroll = true;
     eName = "1";
     cName = tr("Level 1-1");
-    pName = { "oPeashooter", "oSnowPea", "oSunflower", "oWallNut" };
-    zombieData = { { "oZombie3", 1, 1, {} }, { "oConeheadZombie", 3, 3, {} }, { "oBucketheadZombie", 3, 3, {} } };
-    flagNum = 10;
-    largeWaveFlag = { 10 };
-    flagToSumNum = QPair<QList<int>, QList<int> >({ 3, 5, 9 }, { 1, 2, 3, 15 });
+    pName = { "oPeashooter", "oSnowPea", "oSunflower", "oWallNut", "oPumpkinHead", "oTorchwood", "oTallNut" };
+    zombieData = { { "oZombie", 3, 1, {} }, { "oZombie2", 3, 1, {} }, { "oZombie3", 3, 1, {} },
+                   { "oConeheadZombie", 5, 3, {} }, { "oPoleVaultingZombie", 5, 5, {} }, { "oBucketheadZombie", 5, 9, {} } };
+    flagNum = 20;
+    largeWaveFlag = { 9, 19 };
+    flagToSumNum = QPair<QList<int>, QList<int> >({ 3, 4, 8, 9, 10, 13, 15, 19 }, { 1, 3, 5, 7, 20, 8, 10, 14, 30 });
 }
 
 GameLevelData *GameLevelDataFactory(const QString &eName)

@@ -10,7 +10,7 @@
 class Animate
 {
 public:
-    Animate(QGraphicsItem *item);
+    Animate(QGraphicsItem *item, QGraphicsScene *scene);
 
     Animate &move(QPointF toPos);
     Animate &scale(qreal toScale);
@@ -37,6 +37,7 @@ protected:
     };
     struct Animation {
         QTimeLine *anim;
+        QGraphicsScene *scene;
         QList<KeyFrame> frames;
     };
     static Animation *getAnimation(QGraphicsItem *item);
@@ -54,6 +55,7 @@ private:
     QTimeLine::CurveShape m_shape;
 
     QGraphicsItem *item;
+    QGraphicsScene *scene;
 };
 
 #endif //PLANTS_VS_ZOMBIES_BASESCENE_H

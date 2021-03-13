@@ -24,6 +24,8 @@
         <file>images/interface/Sun.gif</file>
         <file>images/interface/Shovel.png</file>
         <file>images/interface/ShovelBack.png</file>
+        <file>images/interface/ZombiesWon.png</file>
+        <file>images/interface/trophy.png</file>
         <!-- Flag -->
         <file>images/interface/FlagMeterEmpty.png</file>
         <file>images/interface/FlagMeterFull.png</file>
@@ -67,6 +69,24 @@
         <!-- Cleaner -->
         <file>images/interface/LawnCleaner.png</file>
         <file>images/interface/PoolCleaner.png</file>
+        <!-- Pumpkin Head-->
+        <file>images/Card/Plants/PumpkinHead.png</file>
+        <file>images/Plants/PumpkinHead/0.gif</file>
+        <file>images/Plants/PumpkinHead/PumpkinHead1.gif</file>
+        <file>images/Plants/PumpkinHead/PumpkinHead2.gif</file>
+        <file>images/Plants/PumpkinHead/pumpkin_damage2.gif</file>
+        <file>images/Plants/PumpkinHead/pumpkin_damage1.gif</file>
+        <file>images/Plants/PumpkinHead/Pumpkin_back.gif</file>
+        <!-- Torchwood -->
+        <file>images/Card/Plants/Torchwood.png</file>
+        <file>images/Plants/Torchwood/0.gif</file>
+        <file>images/Plants/Torchwood/Torchwood.gif</file>
+        <!-- Tall Nut -->
+        <file>images/Card/Plants/TallNut.png</file>
+        <file>images/Plants/TallNut/0.gif</file>
+        <file>images/Plants/TallNut/TallNut.gif</file>
+        <file>images/Plants/TallNut/TallnutCracked1.gif</file>
+        <file>images/Plants/TallNut/TallnutCracked2.gif</file>
         <!-- Zombies -->
         <!-- Zombie -->
         <file>images/Card/Zombies/Zombie.png</file>
@@ -103,38 +123,59 @@
         <file>images/Zombies/BucketheadZombie/BucketheadZombie.gif</file>
         <file>images/Zombies/BucketheadZombie/BucketheadZombieAttack.gif</file>
         <file>images/Zombies/BucketheadZombie/1.gif</file>
+        <!-- Pole Vaulting Zombie -->
+        <file>images/Card/Zombies/PoleVaultingZombie.png</file>
+        <file>images/Zombies/PoleVaultingZombie/0.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombie.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieAttack.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieLostHead.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieLostHeadAttack.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieHead.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieDie.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/BoomDie.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieWalk.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieLostHeadWalk.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieJump.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/PoleVaultingZombieJump2.gif</file>
+        <file>images/Zombies/PoleVaultingZombie/1.gif</file>
         <!-- Translations -->
         <file>translations/main.zh_CN.qm</file>
         <!-- Music -->
         <file>audio/Faster.mp3</file>
-        <file>audio/bleep.mp3</file>
-        <file>audio/tap.mp3</file>
+        <file>audio/bleep.wav</file>
+        <file>audio/tap.wav</file>
         <file>audio/losemusic.mp3</file>
+        <file>audio/winmusic.mp3</file>
         <file>audio/Look_up_at_the_Sky.mp3</file>
         <file>audio/UraniwaNi.mp3</file>
         <file>audio/readysetplant.mp3</file>
-        <file>audio/points.mp3</file>
-        <file>audio/shovel.mp3</file>
-        <file>audio/seedlift.mp3</file>
-        <file>audio/plant1.mp3</file>
-        <file>audio/plant2.mp3</file>
-        <file>audio/awooga.mp3</file>
-        <file>audio/siren.mp3</file>
-        <file>audio/groan1.mp3</file>
-        <file>audio/groan2.mp3</file>
-        <file>audio/groan3.mp3</file>
-        <file>audio/groan4.mp3</file>
-        <file>audio/groan5.mp3</file>
-        <file>audio/groan6.mp3</file>
-        <file>audio/lawnmower.mp3</file>
-        <file>audio/firepea.mp3</file>
-        <file>audio/splat1.mp3</file>
-        <file>audio/splat2.mp3</file>
-        <file>audio/splat3.mp3</file>
-        <file>audio/chomp.mp3</file>
-        <file>audio/chompsoft.mp3</file>
-        <file>audio/plastichit.mp3</file>
-        <file>audio/shieldhit.mp3</file>
-        <file>audio/shieldhit2.mp3</file>
+        <file>audio/points.wav</file>
+        <file>audio/shovel.wav</file>
+        <file>audio/seedlift.wav</file>
+        <file>audio/plant1.wav</file>
+        <file>audio/plant2.wav</file>
+        <file>audio/awooga.wav</file>
+        <file>audio/siren.wav</file>
+        <file>audio/groan1.wav</file>
+        <file>audio/groan2.wav</file>
+        <file>audio/groan3.wav</file>
+        <file>audio/groan4.wav</file>
+        <file>audio/groan5.wav</file>
+        <file>audio/groan6.wav</file>
+        <file>audio/lawnmower.wav</file>
+        <file>audio/firepea.wav</file>
+        <file>audio/splat1.wav</file>
+        <file>audio/splat2.wav</file>
+        <file>audio/splat3.wav</file>
+        <file>audio/chomp.wav</file>
+        <file>audio/chompsoft.wav</file>
+        <file>audio/plastichit.wav</file>
+        <file>audio/shieldhit.wav</file>
+        <file>audio/shieldhit2.wav</file>
+        <file>audio/grassstep.wav</file>
+        <file>audio/polevault.wav</file>
+        <file>audio/frozen.wav</file>
+        <file>audio/ignite.wav</file>
+        <file>audio/ignite2.wav</file>
     </qresource>
 </RCC>

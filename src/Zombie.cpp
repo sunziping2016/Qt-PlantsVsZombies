@@ -70,7 +70,7 @@ FlagZombie::FlagZombie()
     QString path = "Zombies/FlagZombie/";
     cardGif = "Card/Zombies/FlagZombie.png";
     staticGif = path + "0.gif";
-    normalGif = path + "FlagZombie.gif";
+    normalGif = path + "FlagZombie.gif";QSound::play(":/audio/splat1.wav");
     attackGif = path + "FlagZombieAttack.gif";
     lostHeadGif = path + "FlagZombieLostHead.gif";
     lostHeadAttackGif = path + "FlagZombieLostHeadAttack.gif";
@@ -78,19 +78,20 @@ FlagZombie::FlagZombie()
 }
 
 ZombieInstance::ZombieInstance(const Zombie *zombie)
-    : zombieProtoType(zombie), picture(new MoviePixmapItem),
-      attackMusic(new QMediaPlayer(picture)),
-      hitMusic(new QMediaPlayer(picture))
+    : zombieProtoType(zombie), frozenTimer(nullptr), picture(new MoviePixmapItem)
 {
     uuid = QUuid::createUuid();
     hp = zombieProtoType->hp;
-    speed = zombie->speed;
+    orignSpeed = speed = zombie->speed;
+    orignAttack = attack = zombie->attack;
     altitude = 1;
     beAttacked = true;
     isAttacking = false;
     goingDie = false;
     normalGif = zombie->normalGif;
     attackGif = zombie->attackGif;
+    lostHeadGif = zombie->lostHeadGif;
+    lostHeadAttackGif = zombie->lostHeadAttackGif;
 }
 
 void ZombieInstance::birth(int row)
@@ -105,7 +106,7 @@ void ZombieInstance::birth(int row)
     picture->setPos(X, coordinate.getY(row) - zombieProtoType->height - 10);
     picture->setZValue(3 * row + 1);
     shadowPNG = new QGraphicsPixmapItem(gImageCache->load("interface/plantShadow.png"));
-    shadowPNG->setPos(zombieProtoType->beAttackedPointL - 10, zombieProtoType->height - 22);
+    shadowPNG->setPos(getShadowPos());
     shadowPNG->setFlag(QGraphicsItem::ItemStacksBehindParent);
     shadowPNG->setParentItem(picture);
     picture->start();
@@ -127,7 +128,7 @@ void ZombieInstance::checkActs()
             zombieProtoType->scene->zombieDie(this);
         }
         else if (attackedRX < 100) {
-            // TODO: Lose
+            zombieProtoType->scene->gameLose();
         }
     }
 }
@@ -165,23 +166,21 @@ void ZombieInstance::judgeAttack()
 void ZombieInstance::normalAttack(PlantInstance *plantInstance)
 {
     if (qrand() % 2)
-        attackMusic->setMedia(QUrl("qrc:/audio/chomp.mp3"));
+        QSound::play(":/audio/chomp.wav");
     else
-        attackMusic->setMedia(QUrl("qrc:/audio/chompsoft.mp3"));
-    attackMusic->play();
+        QSound::play(":/audio/chompsoft.wav");
     (new Timer(this->picture, 500, [this] {
         if (qrand() % 2)
-            attackMusic->setMedia(QUrl("qrc:/audio/chomp.mp3"));
+            QSound::play(":/audio/chomp.wav");
         else
-            attackMusic->setMedia(QUrl("qrc:/audio/chompsoft.mp3"));
-        attackMusic->play();
+            QSound::play(":/audio/chompsoft.wav");
     }))->start();
     QUuid plantUuid = plantInstance->uuid;
     (new Timer(this->picture, 1000, [this, plantUuid] {
         if (beAttacked) {
             PlantInstance *plant = zombieProtoType->scene->getPlant(plantUuid);
             if (plant)
-                plant->getHurt(this, zombieProtoType->aKind, zombieProtoType->attack);
+                plant->getHurt(this, zombieProtoType->aKind, attack);
             judgeAttack();
         }
     }))->start();
@@ -197,16 +196,17 @@ void ZombieInstance::crushDie()
     if (goingDie)
         return;
     goingDie =  true;
+    beAttacked = false;
     hp = 0;
     MoviePixmapItem *goingDieHead = new MoviePixmapItem(zombieProtoType->headGif);
-    goingDieHead->setPos(zombieProtoType->beAttackedPointL, -20);
-    goingDieHead->setParentItem(picture);
+    goingDieHead->setPos(getDieingHeadPos());
+    zombieProtoType->scene->addToGame(goingDieHead);
     goingDieHead->start();
     shadowPNG->setPixmap(QPixmap());
     picture->stop();
     picture->setPixmap(QPixmap());
-    (new Timer(picture, 2000, [this] {
-        // TODO: Pole Vaulting Zombie
+    (new Timer(picture, 2000, [this, goingDieHead] {
+        goingDieHead->deleteLater();
         zombieProtoType->scene->zombieDie(this);
     }))->start();
 }
@@ -225,12 +225,12 @@ void ZombieInstance::getHit(int attack)
     if (hp < zombieProtoType->breakPoint) {
         //hp = 0;
         if (isAttacking)
-            picture->setMovie(zombieProtoType->lostHeadAttackGif);
+            picture->setMovie(lostHeadAttackGif);
         else
-            picture->setMovie(zombieProtoType->lostHeadGif);
+            picture->setMovie(lostHeadGif);
         picture->start();
         MoviePixmapItem *goingDieHead = new MoviePixmapItem(zombieProtoType->headGif);
-        goingDieHead->setPos(attackedLX, picture->y() - 20);
+        goingDieHead->setPos(getDieingHeadPos());
         goingDieHead->setZValue(picture->zValue());
         zombieProtoType->scene->addToGame(goingDieHead);
         goingDieHead->start();
@@ -274,13 +274,69 @@ void ZombieInstance::normalDie()
 
 void ZombieInstance::playNormalballAudio()
 {
-    hitMusic->stop();
     switch (qrand() % 3) {
-        case 0: hitMusic->setMedia(QUrl("qrc:/audio/splat1.mp3")); break;
-        case 1: hitMusic->setMedia(QUrl("qrc:/audio/splat2.mp3")); break;
-        default: hitMusic->setMedia(QUrl("qrc:/audio/splat3.mp3")); break;
+        case 0: QSound::play(":/audio/splat1.wav"); break;
+        case 1: QSound::play(":/audio/splat2.wav"); break;
+        default: QSound::play(":/audio/splat3.wav"); break;
     }
-    hitMusic->play();
+}
+
+QPointF ZombieInstance::getShadowPos()
+{
+    return QPointF(zombieProtoType->beAttackedPointL - 10, zombieProtoType->height - 22);
+}
+
+QPointF ZombieInstance::getDieingHeadPos()
+{
+    return QPointF(attackedLX, picture->y() - 20);
+}
+
+bool ZombieInstance::getCrushed(PlantInstance *instance)
+{
+    return true;
+}
+
+void ZombieInstance::getSnowPea(int attack, int direction)
+{
+    if (frozenTimer) {
+        frozenTimer->stop();
+        frozenTimer->deleteLater();
+    }
+    speed = orignSpeed / 2;
+    this->attack = 50;
+    (frozenTimer = new Timer(picture, 10000, [this] {
+        frozenTimer = nullptr;
+        speed = orignSpeed;
+        this->attack = orignAttack;
+    }))->start();
+    playSlowballAudio();
+    getHit(attack);
+}
+
+void ZombieInstance::playSlowballAudio()
+{
+    QSound::play(":/audio/frozen.wav");
+}
+
+void ZombieInstance::getFirePea(int attack, int direction)
+{
+    if (frozenTimer) {
+        frozenTimer->stop();
+        frozenTimer->deleteLater();
+        frozenTimer = nullptr;
+        speed = orignSpeed;
+        this->attack = orignAttack;
+    }
+    playFireballAudio();
+    getHit(attack);
+}
+
+void ZombieInstance::playFireballAudio()
+{
+    if (qrand() % 2)
+        QSound::play(":/audio/ignite.wav");
+    else
+        QSound::play(":/audio/ignite2.wav");
 }
 
 
@@ -340,11 +396,8 @@ ConeheadZombieInstance::ConeheadZombieInstance(const Zombie *zombie)
 
 void ConeheadZombieInstance::playNormalballAudio()
 {
-    if (hasOrnaments) {
-        hitMusic->stop();
-        hitMusic->setMedia(QUrl("qrc:/audio/plastichit.mp3"));
-        hitMusic->play();
-    }
+    if (hasOrnaments)
+        QSound::play(":/audio/plastichit.wav");
     else
         OrnZombieInstance1::playNormalballAudio();
 }
@@ -356,12 +409,10 @@ BucketheadZombieInstance::BucketheadZombieInstance(const Zombie *zombie)
 void BucketheadZombieInstance::playNormalballAudio()
 {
     if (hasOrnaments) {
-        hitMusic->stop();
         if (qrand() % 2)
-            hitMusic->setMedia(QUrl("qrc:/audio/shieldhit.mp3"));
+            QSound::play(":/audio/shieldhit.wav");
         else
-            hitMusic->setMedia(QUrl("qrc:/audio/shieldhit2.mp3"));
-        hitMusic->play();
+            QSound::play(":/audio/shieldhit2.wav");
     }
     else
         OrnZombieInstance1::playNormalballAudio();
@@ -393,7 +444,122 @@ PoleVaultingZombie::PoleVaultingZombie()
     beAttackedPointR = 260;
     level = 2;
     sunNum = 75;
-    
+    QString path = "Zombies/PoleVaultingZombie/";
+    cardGif = "Card/Zombies/PoleVaultingZombie.png";
+    staticGif = path + "0.gif";
+    normalGif = path + "PoleVaultingZombie.gif";
+    attackGif = path + "PoleVaultingZombieAttack.gif";
+    lostHeadGif = path + "PoleVaultingZombieLostHead.gif";
+    lostHeadAttackGif = path + "PoleVaultingZombieLostHeadAttack.gif";
+    headGif = path + "PoleVaultingZombieHead.gif";
+    dieGif = path + "PoleVaultingZombieDie.gif";
+    boomDieGif = path + "BoomDie.gif";
+    walkGif = path + "PoleVaultingZombieWalk.gif";
+    lostHeadWalkGif = path + "PoleVaultingZombieLostHeadWalk.gif";
+    jumpGif1 = path + "PoleVaultingZombieJump.gif";
+    jumpGif2 = path + "PoleVaultingZombieJump2.gif";
+    standGif = path + "1.gif";
+}
+
+PoleVaultingZombieInstance::PoleVaultingZombieInstance(const Zombie *zombie)
+    : ZombieInstance(zombie)
+{
+    judgeAttackOrig = false;
+    lostPole = false;
+    beginCrushed = false;
+}
+
+const PoleVaultingZombie *PoleVaultingZombieInstance::getZombieProtoType()
+{
+    return static_cast<const PoleVaultingZombie *>(zombieProtoType);
+}
+
+QPointF PoleVaultingZombieInstance::getShadowPos()
+{
+    return QPointF(zombieProtoType->beAttackedPointL - 20, zombieProtoType->height - 35);
+}
+
+QPointF PoleVaultingZombieInstance::getDieingHeadPos()
+{
+    return QPointF(X, picture->y() - 20);
+}
+
+void PoleVaultingZombieInstance::judgeAttack()
+{
+    if (judgeAttackOrig)
+        ZombieInstance::judgeAttack();
+    else {
+        int colEnd = zombieProtoType->scene->getCoordinate().getCol(ZX);
+        for (int col = colEnd - 2; col <= colEnd; ++col) {
+            if (col > 9) continue;
+            QMap<int, PlantInstance *> plants = zombieProtoType->scene->getPlant(col, row);
+            for (int i = 2; i >= 0; --i) {
+                if (!plants.contains(i)) continue;
+                PlantInstance *plant = plants[i];
+                if (plant->attackedRX >= ZX - 74 && plant->attackedLX < ZX && plant->plantProtoType->canEat) {
+                    judgeAttackOrig = true;
+                    posX = plant->attackedLX;
+                    normalAttack(plant);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void PoleVaultingZombieInstance::normalAttack(PlantInstance *plantInstance)
+{
+    if (lostPole)
+        ZombieInstance::normalAttack(plantInstance);
+    else {
+        QSound::play(":/audio/grassstep.wav");
+        picture->setMovie(getZombieProtoType()->jumpGif1);
+        picture->start();
+        shadowPNG->setVisible(false);
+        isAttacking = true;
+        altitude = 2;
+        (new Timer(picture, 500, [] { QSound::play(":/audio/polevault.wav"); }))->start();
+        QUuid plantUuid = plantInstance->uuid;
+        (new Timer(picture, 1000, [this, plantUuid] {
+            PlantInstance *plant = zombieProtoType->scene->getPlant(plantUuid);
+            if (plant && plant->plantProtoType->stature > 0) {
+                attackedLX = ZX = plant->attackedRX;
+                X = attackedLX - zombieProtoType->beAttackedPointL;
+                attackedRX = X + zombieProtoType->beAttackedPointR;
+                picture->setX(X);
+                picture->setMovie(getZombieProtoType()->walkGif);
+                picture->start();
+                shadowPNG->setVisible(true);
+                isAttacking = 0;
+                altitude = 1;
+                orignSpeed = speed = 1.6;
+                normalGif = getZombieProtoType()->walkGif;
+                lostHeadGif = getZombieProtoType()->lostHeadWalkGif;
+                lostPole = true;
+                judgeAttackOrig = true;
+            }
+            else {
+                attackedRX = posX;
+                X = attackedRX - zombieProtoType->beAttackedPointR;
+                attackedLX = ZX = X + zombieProtoType->beAttackedPointL;
+                picture->setX(X);
+                picture->setMovie(getZombieProtoType()->jumpGif2);
+                picture->start();
+                shadowPNG->setVisible(true);
+                (new Timer(picture, 800, [this]{
+                    picture->setMovie(getZombieProtoType()->walkGif);
+                    picture->start();
+                    isAttacking = 0;
+                    altitude = 1;
+                    orignSpeed = speed = 1.6;
+                    normalGif = getZombieProtoType()->walkGif;
+                    lostHeadGif = getZombieProtoType()->lostHeadWalkGif;
+                    lostPole = true;
+                    judgeAttackOrig = true;
+                }))->start();
+            }
+        }))->start();
+    }
 }
 
 Zombie *ZombieFactory(GameScene *scene, const QString &ename)
@@ -411,6 +577,8 @@ Zombie *ZombieFactory(GameScene *scene, const QString &ename)
         zombie = new ConeheadZombie;
     if (ename == "oBucketheadZombie")
         zombie = new BucketheadZombie;
+    if (ename == "oPoleVaultingZombie")
+        zombie = new PoleVaultingZombie;
     if (zombie) {
         zombie->scene = scene;
         zombie->update();
@@ -424,7 +592,7 @@ ZombieInstance *ZombieInstanceFactory(const Zombie *zombie)
         return new ConeheadZombieInstance(zombie);
     if (zombie->eName == "oBucketheadZombie")
         return new BucketheadZombieInstance(zombie);
+    if (zombie->eName == "oPoleVaultingZombie")
+        return new PoleVaultingZombieInstance(zombie);
     return new ZombieInstance(zombie);
 }
-
-

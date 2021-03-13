@@ -24,8 +24,7 @@ public:
     void setUsername(const QString &username);
     MainWindow *getMainWindow() const;
 
-    void switchToMenuScene();
-    void switchToGameScene(const QString &eName);
+    void switchToScene(QGraphicsScene *scene);
 
 protected:
     virtual void resizeEvent(QResizeEvent *event) override;
@@ -34,8 +33,6 @@ private:
     const int width, height;
     const QString usernameSettingEntry;
 
-    SelectorScene *selectorScene;
-    GameScene *gameScene;
     MainWindow *mainWindow;
 };
 

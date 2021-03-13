@@ -68,6 +68,8 @@ public:
     void beginSun(int sunNum);
     void beginZombies();
     void beginMonitor();
+    void gameLose();
+    void gameWin();
 
     void plantDie(PlantInstance *plant);
     void zombieDie(ZombieInstance *zombie);
@@ -127,15 +129,10 @@ private:
     QGraphicsPixmapItem *movePlantAlpha, *movePlant;
     MoviePixmapItem *imgGrowSoil, *imgGrowSpray;
     FlagMeter *flagMeter;
+    QGraphicsPixmapItem *losePicture, *winPicture;
+    QGraphicsItemGroup *sunGroup;
 
     QMediaPlayer *backgroundMusic;
-    QMediaPlayer *tapMusic;
-    QMediaPlayer *sunMusic;
-    QMediaPlayer *shovelMusic;
-    QMediaPlayer *seedliftMusic;
-    QMediaPlayer *plantMusic1, *plantMusic2;
-    QMediaPlayer *groanMusic;
-    QMediaPlayer *waveMusic;
 
     QMap<QString, Plant *> plantProtoTypes;
     QMap<QString, Zombie *> zombieProtoTypes;
@@ -163,7 +160,7 @@ private:
     QMap<QUuid, ZombieInstance *> zombieUuid;
 
     int choose, sunNum;
-    QTimer *waveTimer;
+    QTimer *waveTimer, *monitorTimer;
     int waveNum;
 };
 
