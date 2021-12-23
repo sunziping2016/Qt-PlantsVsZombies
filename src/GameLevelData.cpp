@@ -71,7 +71,7 @@ GameLevelData_1::GameLevelData_1()
                    { "oConeheadZombie", 5, 3, {} }, { "oPoleVaultingZombie", 5, 5, {} }, { "oBucketheadZombie", 5, 9, {} } };
     flagNum = 20;
     largeWaveFlag = { 9, 19 };
-    flagToSumNum = QPair<QList<int>, QList<int> >({ 3, 4, 8, 9, 10, 13, 15, 19 }, { 1, 3, 5, 7, 20, 8, 10, 14, 30 });
+    flagToSumNum = QPair<QList<int>, QList<int> >({ 3, 4, 8, 9, 10, 13, 15, 19 }, { 1, 2, 3, 5, 15, 6, 8, 10, 20 });
 }
 
 GameLevelData *GameLevelDataFactory(const QString &eName)
